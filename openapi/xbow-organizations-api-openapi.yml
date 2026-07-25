@@ -1,0 +1,780 @@
+openapi: 3.1.0
+info:
+  description: "\n# Versioning\n\nThe API is in public preview. This is a stable version that exposes the most common functionality of the platform. If your use case is not covered, tell us so that we can prioritize work for future releases.\n\nAll API endpoints require the `X-XBOW-API-Version` header to be set to a supported version. Requests without a version header will be rejected with a `400 Bad Request` response.\n\n## Version Lifecycle\n\nAPI versions follow a `YYYY-MM-DD` naming convention (for example, `2026-04-01`). During the public preview, each version is supported, without breaking changes, for a minimum of 4 months from its release date. The support window for new versions will increase as the API matures.\n\n| Version    | Release Date | End of Life |\n|------------|--------------|-------------|\n| next       | Rolling      | N/A         |\n| 2026-07-01 | 2026-07-01   | 2026-11-01  |\n| 2026-06-01 | 2026-06-01   | 2026-10-01  |\n| 2026-04-01 | 2026-04-01   | 2026-07-01  |\n\n## The \"next\" Version\n\nThe `next` version provides early access to upcoming API changes. Use it in non-production environments to test and prepare for the next stable release.\n\n- Changes are pushed to `next` as they stabilize\n- `next` becomes the next stable version upon release\n- Breaking changes may occur in `next` before a stable release\n\n## End of Life (EOL)\n\nWhen a version reaches its end-of-life date:\n\n- **API requests** to that version will fail with a `400 Bad Request` response\n- **Webhook subscriptions** for that version will stop emitting events\n\nMigrate to a supported version before the EOL date to avoid service disruption. Also update webhooks to a supported version.\n\n## Changes from 2026-06-01 to 2026-07-01\n\n### Finding workflow metadata\n\nFindings now carry customer-controlled workflow metadata, independent of the XBOW-owned lifecycle fields (state, severity, CVSS):\n\n- `externalWorkflowState`: your own tracking state for the finding.\n- `externalTicketReference`: a reference to an external ticket. May only be present alongside an `externalWorkflowState`.\n\nA new endpoint updates these fields:\n\n- `PATCH /api/v1/findings/:findingId` — Update a finding's `externalWorkflowState` and `externalTicketReference`. Omitted fields are left unchanged; send `null` to clear a field.\n\nThese fields also appear in `GET /api/v1/findings/{findingId}`, `GET /api/v1/assets/{assetId}/findings`, and `finding.changed` webhook payloads for subscriptions pinned to `2026-07-01`.\n\n# Accessing the API\n\nThe API is available at `https://console.xbow.com/api/v1/`. All endpoints require authentication via an API key provided in the `Authorization: Bearer <token>` header.\n\n**Note:** For Lightspeed organizations, the API is available in read-only mode. That is, only `GET` endpoints are available.\n\n## Generate a personal access token (PAT)\n\n1. Log into your XBOW dashboard at https://console.xbow.com with administrator access to the organization you want to generate an API key for.\n1. Click your profile icon in the top right corner and select **Settings**.\n1. In the left sidebar, click **Personal Access Tokens**.\n1. Click **Generate new token**.\n1. Provide a name and select the scope for the token, that is, the organization you want to use it with.\n1. Click **Create**.\n1. Copy and securely store your key (it won't be shown again).\n\nStore API keys securely using environment variables or secret managers. Never commit keys to version control. Rotate keys periodically and revoke compromised keys immediately.\n\n## API request headers\n\nAll API requests require two headers: your API key for authentication and the API version you want to use. For example:\n\n```curl\ncurl -X GET \"https://console.xbow.com/api/v1/assets/{assetId}/findings\" \\\n  -H \"Authorization: Bearer YOUR_API_KEY\" \\\n  -H \"X-XBOW-API-Version: 2026-07-01\" \\\n  -H \"Content-Type: application/json\"\n```\n\n## Error responses\n\nIn addition to the responses described with each endpoint, the API may also return the following responses:\n\n- `400 Bad Request`: the request was malformed or contained invalid parameters, including missing version header.\n- `401 Unauthorized`: missing an API key or the provided API key is invalid.\n- `403 Forbidden`: the API key is valid, but the user does not have permission to access the requested resource.\n- `429 Too Many Requests`: exceeded rate limit, try again with exponential backoff.\n- `500 Internal Server Error`: an unexpected error occurred, try again with exponential backoff.\n\nThe error response body will be in the following format:\n\n```json\n{\n  \"code\": \"ERR_ERROR_TYPE\",\n  \"error\": \"Error Type\",\n  \"message\": \"Detailed error message\"\n}\n```\n\n# Pagination & Rate Limiting\n\n## Pagination\n\nList endpoints use cursor-based pagination. Use the `limit` query parameter to control page size (1-100, default 20) and the `after` parameter to fetch subsequent pages using the cursor from a previous response.\n\nResponses include an `items` array and a `nextCursor` field:\n\n```json\n{\n  \"items\": [...],\n  \"nextCursor\": \"eyJpZCI6IjEyMyJ9\"\n}\n```\n\nTo fetch the next page, pass the `nextCursor` value as the `after` parameter in your next request. When `nextCursor` is `null`, there are no more results.\n\n## Rate Limiting\n\nAPI requests are subject to rate limiting. If you receive a `429 Too Many Requests` response, implement exponential backoff before retrying.\n\n"
+  title: XBOW Assessments Organizations API
+  version: '2026-07-01'
+servers:
+- description: Default
+  url: https://console.xbow.com/
+- description: Multi SAAS - Europe data resident instance
+  url: https://console.eu.xbow.com/
+- description: Multi SAAS - Asia Pacific data resident instance
+  url: https://console.sg.xbow.com/
+tags:
+- description: Endpoints related to organizations and their management.
+  name: Organizations
+paths:
+  /api/v1/integrations/{integrationId}/organizations:
+    get:
+      description: 'Lists all organizations for an integration.
+
+
+        Requires an _integration_ API key.
+
+
+        Supports pagination via `limit` and `after` query parameters.'
+      parameters:
+      - in: query
+        name: limit
+        required: false
+        schema:
+          default: 20
+          maximum: 100
+          minimum: 1
+          type: integer
+      - in: query
+        name: after
+        required: false
+        schema:
+          type: string
+      - in: path
+        name: integrationId
+        required: true
+        schema:
+          type: string
+      - description: API version to use for this request
+        in: header
+        name: X-XBOW-API-Version
+        required: true
+        schema:
+          enum:
+          - '2026-07-01'
+          example: '2026-07-01'
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                example:
+                  items:
+                  - createdAt: '2025-01-01T00:00:00Z'
+                    externalId: '123'
+                    id: 123e4567-e89b-12d3-a456-426614174000
+                    name: Example Organization
+                    state: active
+                    updatedAt: '2025-01-01T00:00:00Z'
+                  - createdAt: '2025-01-02T00:00:00Z'
+                    externalId: '234'
+                    id: 456e7890-e89b-12d3-a456-426614174111
+                    name: Another Organization
+                    state: active
+                    updatedAt: '2025-01-02T00:00:00Z'
+                  nextCursor: eyJjcmVhdGVkQXQiOiIyMDI1LTAxLTAyVDAwOjAwOjAwWiIsImlkIjoiNDU2ZTc4OTAtZTg5Yi0xMmQzLWE0NTYtNDI2NjE0MTc0MTExIn0=
+                properties:
+                  items:
+                    items:
+                      properties:
+                        createdAt:
+                          format: date-time
+                          type: string
+                        externalId:
+                          anyOf:
+                          - type: string
+                          - type: 'null'
+                        id:
+                          type: string
+                        name:
+                          type: string
+                        state:
+                          enum:
+                          - active
+                          - disabled
+                          type: string
+                        updatedAt:
+                          format: date-time
+                          type: string
+                      required:
+                      - createdAt
+                      - externalId
+                      - id
+                      - name
+                      - state
+                      - updatedAt
+                      type: object
+                    type: array
+                  nextCursor:
+                    type: string
+                required:
+                - items
+                type: object
+          description: Default Response
+        '400':
+          content:
+            application/json:
+              schema:
+                properties:
+                  code:
+                    description: A constant for machines
+                    enum:
+                    - FST_ERR_VALIDATION
+                    type: string
+                  error:
+                    description: A human readable string for the constant
+                    enum:
+                    - Bad Request
+                    type: string
+                  message:
+                    description: A human readable message
+                    type: string
+                  requestId:
+                    description: A unique identifier for the request
+                    type: string
+                required:
+                - code
+                - error
+                - message
+                - requestId
+                type: object
+          description: Default Response
+      security:
+      - Authorization: []
+      summary: List organizations
+      tags:
+      - Organizations
+    post:
+      description: 'Creates a new organization. This is required before setting up an asset.
+
+
+        Requires an _integration_ API key.'
+      parameters:
+      - in: path
+        name: integrationId
+        required: true
+        schema:
+          type: string
+      - description: API version to use for this request
+        in: header
+        name: X-XBOW-API-Version
+        required: true
+        schema:
+          enum:
+          - '2026-07-01'
+          example: '2026-07-01'
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              example:
+                externalId: org-12345
+                members:
+                - email: john@example.com
+                  name: John Smith
+                - email: jane@example.com
+                  name: Jane Doe
+                name: Example Organization
+              properties:
+                externalId:
+                  anyOf:
+                  - type: string
+                  - type: 'null'
+                  description: External reference for this customer. Must be unique among all organizations you provision.
+                members:
+                  description: List of members in the organization. At least one member is required.
+                  items:
+                    properties:
+                      email:
+                        description: Email of the customer
+                        format: email
+                        pattern: ^(?!\.)(?!.*\.\.)([A-Za-z0-9_'+\-\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\-]*\.)+[A-Za-z]{2,}$
+                        type: string
+                      name:
+                        description: Name of the customer
+                        minLength: 1
+                        type: string
+                    required:
+                    - email
+                    - name
+                    type: object
+                  minItems: 1
+                  type: array
+                name:
+                  description: Name of the company. Not required to be unique.
+                  minLength: 1
+                  type: string
+              required:
+              - externalId
+              - members
+              - name
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                example:
+                  createdAt: '2025-01-01T00:00:00Z'
+                  externalId: org-12345
+                  id: 123e4567-e89b-12d3-a456-426614174000
+                  name: Example Organization
+                  state: active
+                  updatedAt: '2025-01-01T00:00:00Z'
+                properties:
+                  createdAt:
+                    format: date-time
+                    type: string
+                  externalId:
+                    anyOf:
+                    - type: string
+                    - type: 'null'
+                  id:
+                    type: string
+                  name:
+                    type: string
+                  state:
+                    enum:
+                    - active
+                    - disabled
+                    type: string
+                  updatedAt:
+                    format: date-time
+                    type: string
+                required:
+                - createdAt
+                - externalId
+                - id
+                - name
+                - state
+                - updatedAt
+                type: object
+          description: Default Response
+        '400':
+          content:
+            application/json:
+              schema:
+                properties:
+                  code:
+                    description: A constant for machines
+                    enum:
+                    - FST_ERR_VALIDATION
+                    type: string
+                  error:
+                    description: A human readable string for the constant
+                    enum:
+                    - Bad Request
+                    type: string
+                  message:
+                    description: A human readable message
+                    type: string
+                  requestId:
+                    description: A unique identifier for the request
+                    type: string
+                required:
+                - code
+                - error
+                - message
+                - requestId
+                type: object
+          description: Default Response
+        '403':
+          content:
+            application/json:
+              schema:
+                properties:
+                  code:
+                    description: A constant for machines
+                    enum:
+                    - ERR_FORBIDDEN
+                    type: string
+                  error:
+                    description: A human readable string for the constant
+                    enum:
+                    - Forbidden
+                    type: string
+                  message:
+                    description: A human readable message
+                    type: string
+                  requestId:
+                    description: A unique identifier for the request
+                    type: string
+                required:
+                - code
+                - error
+                - message
+                - requestId
+                type: object
+          description: Default Response
+        '409':
+          content:
+            application/json:
+              schema:
+                properties:
+                  code:
+                    description: A constant for machines
+                    enum:
+                    - ERR_CONFLICT
+                    type: string
+                  error:
+                    description: A human readable string for the constant
+                    enum:
+                    - Conflict
+                    type: string
+                  message:
+                    description: A human readable message
+                    type: string
+                  requestId:
+                    description: A unique identifier for the request
+                    type: string
+                required:
+                - code
+                - error
+                - message
+                - requestId
+                type: object
+          description: The resource already exists
+      security:
+      - Authorization: []
+      summary: Create organization
+      tags:
+      - Organizations
+  /api/v1/keys/{keyId}:
+    delete:
+      description: 'Revokes an existing API key for an organization.
+
+
+        Requires an _integration_ API key.'
+      parameters:
+      - in: path
+        name: keyId
+        required: true
+        schema:
+          type: string
+      - description: API version to use for this request
+        in: header
+        name: X-XBOW-API-Version
+        required: true
+        schema:
+          enum:
+          - '2026-07-01'
+          example: '2026-07-01'
+          type: string
+      responses:
+        '204':
+          description: Default Response
+        '400':
+          content:
+            application/json:
+              schema:
+                properties:
+                  code:
+                    description: A constant for machines
+                    enum:
+                    - FST_ERR_VALIDATION
+                    type: string
+                  error:
+                    description: A human readable string for the constant
+                    enum:
+                    - Bad Request
+                    type: string
+                  message:
+                    description: A human readable message
+                    type: string
+                  requestId:
+                    description: A unique identifier for the request
+                    type: string
+                required:
+                - code
+                - error
+                - message
+                - requestId
+                type: object
+          description: Default Response
+      security:
+      - Authorization: []
+      summary: Revoke organization key
+      tags:
+      - Organizations
+  /api/v1/organizations/{organizationId}:
+    get:
+      description: 'Retrieves a specific organization by ID.
+
+
+        Accepts either an _integration_ API key or an _organization_ API key.'
+      parameters:
+      - in: path
+        name: organizationId
+        required: true
+        schema:
+          type: string
+      - description: API version to use for this request
+        in: header
+        name: X-XBOW-API-Version
+        required: true
+        schema:
+          enum:
+          - '2026-07-01'
+          example: '2026-07-01'
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                example:
+                  createdAt: '2025-01-01T00:00:00Z'
+                  externalId: org-12345
+                  id: 123e4567-e89b-12d3-a456-426614174000
+                  name: Example Organization
+                  state: active
+                  updatedAt: '2025-01-01T00:00:00Z'
+                properties:
+                  createdAt:
+                    format: date-time
+                    type: string
+                  externalId:
+                    anyOf:
+                    - type: string
+                    - type: 'null'
+                  id:
+                    type: string
+                  name:
+                    type: string
+                  state:
+                    enum:
+                    - active
+                    - disabled
+                    type: string
+                  updatedAt:
+                    format: date-time
+                    type: string
+                required:
+                - createdAt
+                - externalId
+                - id
+                - name
+                - state
+                - updatedAt
+                type: object
+          description: Default Response
+        '400':
+          content:
+            application/json:
+              schema:
+                properties:
+                  code:
+                    description: A constant for machines
+                    enum:
+                    - FST_ERR_VALIDATION
+                    type: string
+                  error:
+                    description: A human readable string for the constant
+                    enum:
+                    - Bad Request
+                    type: string
+                  message:
+                    description: A human readable message
+                    type: string
+                  requestId:
+                    description: A unique identifier for the request
+                    type: string
+                required:
+                - code
+                - error
+                - message
+                - requestId
+                type: object
+          description: Default Response
+        '404':
+          content:
+            application/json:
+              schema:
+                properties:
+                  code:
+                    description: A constant for machines
+                    enum:
+                    - ERR_NOT_FOUND
+                    type: string
+                  error:
+                    description: A human readable string for the constant
+                    enum:
+                    - Not Found
+                    type: string
+                  message:
+                    description: A human readable message
+                    type: string
+                  requestId:
+                    description: A unique identifier for the request
+                    type: string
+                required:
+                - code
+                - error
+                - message
+                - requestId
+                type: object
+          description: The requested resource was not found
+      security:
+      - Authorization: []
+      summary: Get organization
+      tags:
+      - Organizations
+    put:
+      description: 'Updates an existing organization.
+
+
+        Requires an _integration_ API key.'
+      parameters:
+      - in: path
+        name: organizationId
+        required: true
+        schema:
+          type: string
+      - description: API version to use for this request
+        in: header
+        name: X-XBOW-API-Version
+        required: true
+        schema:
+          enum:
+          - '2026-07-01'
+          example: '2026-07-01'
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              example:
+                externalId: updated-org-12345
+                name: Updated Organization Name
+              properties:
+                externalId:
+                  anyOf:
+                  - type: string
+                  - type: 'null'
+                name:
+                  type: string
+              required:
+              - externalId
+              - name
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                example:
+                  createdAt: '2025-01-01T00:00:00Z'
+                  externalId: updated-org-12345
+                  id: 123e4567-e89b-12d3-a456-426614174000
+                  name: Updated Organization Name
+                  state: active
+                  updatedAt: '2025-01-01T00:00:00Z'
+                properties:
+                  createdAt:
+                    format: date-time
+                    type: string
+                  externalId:
+                    anyOf:
+                    - type: string
+                    - type: 'null'
+                  id:
+                    type: string
+                  name:
+                    type: string
+                  state:
+                    enum:
+                    - active
+                    - disabled
+                    type: string
+                  updatedAt:
+                    format: date-time
+                    type: string
+                required:
+                - createdAt
+                - externalId
+                - id
+                - name
+                - state
+                - updatedAt
+                type: object
+          description: Default Response
+        '400':
+          content:
+            application/json:
+              schema:
+                properties:
+                  code:
+                    description: A constant for machines
+                    enum:
+                    - FST_ERR_VALIDATION
+                    type: string
+                  error:
+                    description: A human readable string for the constant
+                    enum:
+                    - Bad Request
+                    type: string
+                  message:
+                    description: A human readable message
+                    type: string
+                  requestId:
+                    description: A unique identifier for the request
+                    type: string
+                required:
+                - code
+                - error
+                - message
+                - requestId
+                type: object
+          description: Default Response
+      security:
+      - Authorization: []
+      summary: Update organization
+      tags:
+      - Organizations
+  /api/v1/organizations/{organizationId}/keys:
+    post:
+      description: "Creates a new API key for an organization in an integration. \n\nRequires an _integration_ API key."
+      parameters:
+      - in: path
+        name: organizationId
+        required: true
+        schema:
+          type: string
+      - description: API version to use for this request
+        in: header
+        name: X-XBOW-API-Version
+        required: true
+        schema:
+          enum:
+          - '2026-07-01'
+          example: '2026-07-01'
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              example:
+                expiresInMinutes: 30
+                name: Example Key
+              properties:
+                expiresInMinutes:
+                  default: 60
+                  description: Number of minutes until the key expires. If not specified, defaults to 1 hour. Maximum 1440 minutes (24 hours).
+                  exclusiveMinimum: 0
+                  maximum: 1440
+                  type: integer
+                name:
+                  type: string
+              required:
+              - name
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                example:
+                  createdAt: '2025-01-01T00:00:00Z'
+                  expiresAt: '2026-01-01T00:00:00Z'
+                  id: 123e4567-e89b-12d3-a456-426614174000
+                  key: xbt_0010-123e4567-e89b-12d3-a456-426614174000-AbCdEfGhIjKlMnOpQrStUvWxYz
+                  name: Example Key
+                  updatedAt: '2025-01-01T00:00:00Z'
+                properties:
+                  createdAt:
+                    format: date-time
+                    type: string
+                  expiresAt:
+                    anyOf:
+                    - format: date-time
+                      pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d(?:\.\d+)?)?(?:Z))$
+                      type: string
+                    - type: 'null'
+                  id:
+                    type: string
+                  key:
+                    type: string
+                  name:
+                    type: string
+                  updatedAt:
+                    format: date-time
+                    type: string
+                required:
+                - createdAt
+                - expiresAt
+                - id
+                - key
+                - name
+                - updatedAt
+                type: object
+          description: Default Response
+        '400':
+          content:
+            application/json:
+              schema:
+                properties:
+                  code:
+                    description: A constant for machines
+                    enum:
+                    - FST_ERR_VALIDATION
+                    type: string
+                  error:
+                    description: A human readable string for the constant
+                    enum:
+                    - Bad Request
+                    type: string
+                  message:
+                    description: A human readable message
+                    type: string
+                  requestId:
+                    description: A unique identifier for the request
+                    type: string
+                required:
+                - code
+                - error
+                - message
+                - requestId
+                type: object
+          description: Default Response
+        '403':
+          content:
+            application/json:
+              schema:
+                properties:
+                  code:
+                    description: A constant for machines
+                    enum:
+                    - ERR_FORBIDDEN
+                    type: string
+                  error:
+                    description: A human readable string for the constant
+                    enum:
+                    - Forbidden
+                    type: string
+                  message:
+                    description: A human readable message
+                    type: string
+                  requestId:
+                    description: A unique identifier for the request
+                    type: string
+                required:
+                - code
+                - error
+                - message
+                - requestId
+                type: object
+          description: Default Response
+      security:
+      - Authorization: []
+      summary: Create organization key
+      tags:
+      - Organizations
+components:
+  securitySchemes:
+    Authorization:
+      bearerFormat: API Key
+      description: Authorization header with Bearer token
+      scheme: bearer
+      type: http

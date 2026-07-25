@@ -1,0 +1,1903 @@
+openapi: 3.1.0
+info:
+  description: "\n# Versioning\n\nThe API is in public preview. This is a stable version that exposes the most common functionality of the platform. If your use case is not covered, tell us so that we can prioritize work for future releases.\n\nAll API endpoints require the `X-XBOW-API-Version` header to be set to a supported version. Requests without a version header will be rejected with a `400 Bad Request` response.\n\n## Version Lifecycle\n\nAPI versions follow a `YYYY-MM-DD` naming convention (for example, `2026-04-01`). During the public preview, each version is supported, without breaking changes, for a minimum of 4 months from its release date. The support window for new versions will increase as the API matures.\n\n| Version    | Release Date | End of Life |\n|------------|--------------|-------------|\n| next       | Rolling      | N/A         |\n| 2026-07-01 | 2026-07-01   | 2026-11-01  |\n| 2026-06-01 | 2026-06-01   | 2026-10-01  |\n| 2026-04-01 | 2026-04-01   | 2026-07-01  |\n\n## The \"next\" Version\n\nThe `next` version provides early access to upcoming API changes. Use it in non-production environments to test and prepare for the next stable release.\n\n- Changes are pushed to `next` as they stabilize\n- `next` becomes the next stable version upon release\n- Breaking changes may occur in `next` before a stable release\n\n## End of Life (EOL)\n\nWhen a version reaches its end-of-life date:\n\n- **API requests** to that version will fail with a `400 Bad Request` response\n- **Webhook subscriptions** for that version will stop emitting events\n\nMigrate to a supported version before the EOL date to avoid service disruption. Also update webhooks to a supported version.\n\n## Changes from 2026-06-01 to 2026-07-01\n\n### Finding workflow metadata\n\nFindings now carry customer-controlled workflow metadata, independent of the XBOW-owned lifecycle fields (state, severity, CVSS):\n\n- `externalWorkflowState`: your own tracking state for the finding.\n- `externalTicketReference`: a reference to an external ticket. May only be present alongside an `externalWorkflowState`.\n\nA new endpoint updates these fields:\n\n- `PATCH /api/v1/findings/:findingId` — Update a finding's `externalWorkflowState` and `externalTicketReference`. Omitted fields are left unchanged; send `null` to clear a field.\n\nThese fields also appear in `GET /api/v1/findings/{findingId}`, `GET /api/v1/assets/{assetId}/findings`, and `finding.changed` webhook payloads for subscriptions pinned to `2026-07-01`.\n\n# Accessing the API\n\nThe API is available at `https://console.xbow.com/api/v1/`. All endpoints require authentication via an API key provided in the `Authorization: Bearer <token>` header.\n\n**Note:** For Lightspeed organizations, the API is available in read-only mode. That is, only `GET` endpoints are available.\n\n## Generate a personal access token (PAT)\n\n1. Log into your XBOW dashboard at https://console.xbow.com with administrator access to the organization you want to generate an API key for.\n1. Click your profile icon in the top right corner and select **Settings**.\n1. In the left sidebar, click **Personal Access Tokens**.\n1. Click **Generate new token**.\n1. Provide a name and select the scope for the token, that is, the organization you want to use it with.\n1. Click **Create**.\n1. Copy and securely store your key (it won't be shown again).\n\nStore API keys securely using environment variables or secret managers. Never commit keys to version control. Rotate keys periodically and revoke compromised keys immediately.\n\n## API request headers\n\nAll API requests require two headers: your API key for authentication and the API version you want to use. For example:\n\n```curl\ncurl -X GET \"https://console.xbow.com/api/v1/assets/{assetId}/findings\" \\\n  -H \"Authorization: Bearer YOUR_API_KEY\" \\\n  -H \"X-XBOW-API-Version: 2026-07-01\" \\\n  -H \"Content-Type: application/json\"\n```\n\n## Error responses\n\nIn addition to the responses described with each endpoint, the API may also return the following responses:\n\n- `400 Bad Request`: the request was malformed or contained invalid parameters, including missing version header.\n- `401 Unauthorized`: missing an API key or the provided API key is invalid.\n- `403 Forbidden`: the API key is valid, but the user does not have permission to access the requested resource.\n- `429 Too Many Requests`: exceeded rate limit, try again with exponential backoff.\n- `500 Internal Server Error`: an unexpected error occurred, try again with exponential backoff.\n\nThe error response body will be in the following format:\n\n```json\n{\n  \"code\": \"ERR_ERROR_TYPE\",\n  \"error\": \"Error Type\",\n  \"message\": \"Detailed error message\"\n}\n```\n\n# Pagination & Rate Limiting\n\n## Pagination\n\nList endpoints use cursor-based pagination. Use the `limit` query parameter to control page size (1-100, default 20) and the `after` parameter to fetch subsequent pages using the cursor from a previous response.\n\nResponses include an `items` array and a `nextCursor` field:\n\n```json\n{\n  \"items\": [...],\n  \"nextCursor\": \"eyJpZCI6IjEyMyJ9\"\n}\n```\n\nTo fetch the next page, pass the `nextCursor` value as the `after` parameter in your next request. When `nextCursor` is `null`, there are no more results.\n\n## Rate Limiting\n\nAPI requests are subject to rate limiting. If you receive a `429 Too Many Requests` response, implement exponential backoff before retrying.\n\n"
+  title: XBOW Assessments Assets API
+  version: '2026-07-01'
+servers:
+- description: Default
+  url: https://console.xbow.com/
+- description: Multi SAAS - Europe data resident instance
+  url: https://console.eu.xbow.com/
+- description: Multi SAAS - Asia Pacific data resident instance
+  url: https://console.sg.xbow.com/
+tags:
+- description: 'Endpoints related to assets within an organization.
+
+
+    All endpoints require an _organization_ API key.'
+  name: Assets
+paths:
+  /api/v1/assets/{assetId}:
+    get:
+      description: Gets a specific asset by ID.
+      parameters:
+      - in: path
+        name: assetId
+        required: true
+        schema:
+          type: string
+      - description: API version to use for this request
+        in: header
+        name: X-XBOW-API-Version
+        required: true
+        schema:
+          enum:
+          - '2026-07-01'
+          example: '2026-07-01'
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                example:
+                  approvedTimeWindows:
+                    entries:
+                    - endTime: '17:00'
+                      endWeekday: 1
+                      startTime: 09:00
+                      startWeekday: 1
+                    - endTime: '17:00'
+                      endWeekday: 2
+                      startTime: 09:00
+                      startWeekday: 2
+                    - endTime: '17:00'
+                      endWeekday: 3
+                      startTime: 09:00
+                      startWeekday: 3
+                    - endTime: '17:00'
+                      endWeekday: 4
+                      startTime: 09:00
+                      startWeekday: 4
+                    - endTime: '17:00'
+                      endWeekday: 5
+                      startTime: 09:00
+                      startWeekday: 5
+                    tz: Europe/Berlin
+                  archiveAt: null
+                  authorizationHeaderDomains: attackable
+                  checks:
+                    assetReachable:
+                      error:
+                        status: 401
+                        type: http
+                      message: Start URL is behind Cloudflare Access
+                      state: invalid
+                    credentials:
+                      error: null
+                      message: Credentials valid
+                      state: valid
+                    dnsBoundaryRules:
+                      error: null
+                      message: Waiting for start URL
+                      state: unchecked
+                    updatedAt: '2025-01-01T00:00:00Z'
+                  createdAt: '2025-01-01T00:00:00Z'
+                  credentials:
+                  - authenticatorUri: otpauth://totp/Example:admin?secret=JBSWY3DPEHPK3PXP
+                    emailAddress: null
+                    id: 123e4567-e89b-12d3-a456-426614174004
+                    name: Admin
+                    password: password123
+                    type: username-password
+                    username: admin
+                  customHeaderDomains: attackable
+                  dnsBoundaryRules:
+                  - action: allow-attack
+                    filter: example.com
+                    id: 123e4567-e89b-12d3-a456-426614174002
+                    includeSubdomains: true
+                    type: glob
+                  headers:
+                    X-Multi-Value:
+                    - value1
+                    - value2
+                    X-Single-Value: value1
+                  httpBoundaryRules:
+                  - action: deny
+                    filter: https://example.com/blocked
+                    id: 123e4567-e89b-12d3-a456-426614174003
+                    type: exact
+                  id: 123e4567-e89b-12d3-a456-426614174000
+                  lifecycle: active
+                  maxRequestsPerSecond: 1000
+                  name: Example Target
+                  organizationId: 123e4567-e89b-12d3-a456-426614174001
+                  sku: standard-sku
+                  startUrl: https://example.com
+                  updatedAt: '2025-01-01T00:00:00Z'
+                properties:
+                  approvedTimeWindows:
+                    anyOf:
+                    - properties:
+                        entries:
+                          items:
+                            properties:
+                              endTime:
+                                description: End time in HH:mm format
+                                pattern: ^-?\d+(?:\.\d+)?-?\d+(?:\.\d+)?:-?\d+(?:\.\d+)?-?\d+(?:\.\d+)?$
+                                type: string
+                              endWeekday:
+                                description: End day where 1 == Monday, 7 == Sunday
+                                enum:
+                                - 1
+                                - 2
+                                - 3
+                                - 4
+                                - 5
+                                - 6
+                                - 7
+                                type: number
+                              startTime:
+                                description: Start time in HH:mm format
+                                pattern: ^-?\d+(?:\.\d+)?-?\d+(?:\.\d+)?:-?\d+(?:\.\d+)?-?\d+(?:\.\d+)?$
+                                type: string
+                              startWeekday:
+                                description: Start day where 1 == Monday, 7 == Sunday
+                                enum:
+                                - 1
+                                - 2
+                                - 3
+                                - 4
+                                - 5
+                                - 6
+                                - 7
+                                type: number
+                            required:
+                            - endTime
+                            - endWeekday
+                            - startTime
+                            - startWeekday
+                            type: object
+                          type: array
+                        tz:
+                          description: IANA timezone name, e.g. 'Europe/Berlin'
+                          type: string
+                      required:
+                      - entries
+                      - tz
+                      type: object
+                    - type: 'null'
+                  archiveAt:
+                    anyOf:
+                    - format: date-time
+                      type: string
+                    - type: 'null'
+                    description: When the asset will be (or was) archived
+                  authorizationHeaderDomains:
+                    description: 'Controls which domains receive the application''s authorization headers during assessment:
+
+
+                      - `attackable`: `Authorization` headers are only sent to domains with `allow-attack` DNS boundary rules (default)
+
+                      - `all`: `Authorization` headers are also sent to domains with `allow-visit` rules'
+                    enum:
+                    - all
+                    - attackable
+                    type: string
+                  checks:
+                    properties:
+                      assetReachable:
+                        properties:
+                          error:
+                            anyOf:
+                            - oneOf:
+                              - description: Unable to resolve domain name
+                                properties:
+                                  code:
+                                    type: string
+                                  type:
+                                    enum:
+                                    - dns
+                                    type: string
+                                required:
+                                - code
+                                - type
+                                type: object
+                              - description: Timed out whilst trying to reach the URL
+                                properties:
+                                  type:
+                                    enum:
+                                    - timeout
+                                    type: string
+                                required:
+                                - type
+                                type: object
+                              - description: Unable to connect to site
+                                properties:
+                                  code:
+                                    type: string
+                                  type:
+                                    enum:
+                                    - network
+                                    type: string
+                                required:
+                                - code
+                                - type
+                                type: object
+                              - description: Non 2xx status response received
+                                properties:
+                                  status:
+                                    type: number
+                                  type:
+                                    enum:
+                                    - http
+                                    type: string
+                                required:
+                                - status
+                                - type
+                                type: object
+                              - description: Detected WAF blocking access
+                                properties:
+                                  type:
+                                    enum:
+                                    - waf
+                                    type: string
+                                  wafProvider:
+                                    enum:
+                                    - cloudflare-access
+                                    - cloudflare-challenge
+                                    type: string
+                                required:
+                                - type
+                                type: object
+                            - type: 'null'
+                          message:
+                            type: string
+                          state:
+                            enum:
+                            - checking
+                            - invalid
+                            - unchecked
+                            - valid
+                            type: string
+                        required:
+                        - error
+                        - message
+                        - state
+                        type: object
+                      credentials:
+                        properties:
+                          error:
+                            anyOf:
+                            - properties:
+                                type:
+                                  type: string
+                              required:
+                              - type
+                              type: object
+                            - type: 'null'
+                          message:
+                            type: string
+                          state:
+                            enum:
+                            - checking
+                            - invalid
+                            - unchecked
+                            - valid
+                            type: string
+                        required:
+                        - error
+                        - message
+                        - state
+                        type: object
+                      dnsBoundaryRules:
+                        properties:
+                          error:
+                            anyOf:
+                            - properties:
+                                type:
+                                  type: string
+                              required:
+                              - type
+                              type: object
+                            - type: 'null'
+                          message:
+                            type: string
+                          state:
+                            enum:
+                            - checking
+                            - invalid
+                            - unchecked
+                            - valid
+                            type: string
+                        required:
+                        - error
+                        - message
+                        - state
+                        type: object
+                      updatedAt:
+                        anyOf:
+                        - format: date-time
+                          type: string
+                        - type: 'null'
+                    required:
+                    - assetReachable
+                    - credentials
+                    - dnsBoundaryRules
+                    - updatedAt
+                    type: object
+                  createdAt:
+                    format: date-time
+                    type: string
+                  credentials:
+                    anyOf:
+                    - items:
+                        properties:
+                          authenticatorUri:
+                            anyOf:
+                            - pattern: ^otpauth:\/\/.*
+                              type: string
+                            - type: 'null'
+                          emailAddress:
+                            anyOf:
+                            - format: email
+                              pattern: ^(?!\.)(?!.*\.\.)([A-Za-z0-9_'+\-\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\-]*\.)+[A-Za-z]{2,}$
+                              type: string
+                            - type: 'null'
+                          id:
+                            type: string
+                          name:
+                            type: string
+                          password:
+                            type: string
+                          type:
+                            enum:
+                            - username-password
+                            type: string
+                          username:
+                            type: string
+                        required:
+                        - id
+                        - name
+                        - password
+                        - type
+                        - username
+                        type: object
+                      type: array
+                    - type: 'null'
+                  customHeaderDomains:
+                    description: 'Controls which domains receive the application''s custom headers during assessment:
+
+
+                      - `attackable`: Any custom headers are only sent to domains with `allow-attack` DNS boundary rules (default)
+
+                      - `all`: Any custom headers are also sent to domains with `allow-visit` rules'
+                    enum:
+                    - all
+                    - attackable
+                    type: string
+                  dnsBoundaryRules:
+                    anyOf:
+                    - items:
+                        properties:
+                          action:
+                            enum:
+                            - allow-attack
+                            - allow-visit
+                            - deny
+                            type: string
+                          filter:
+                            type: string
+                          id:
+                            type: string
+                          includeSubdomains:
+                            type: boolean
+                          type:
+                            enum:
+                            - glob
+                            type: string
+                        required:
+                        - action
+                        - filter
+                        - id
+                        - type
+                        type: object
+                      type: array
+                    - type: 'null'
+                  headers:
+                    anyOf:
+                    - additionalProperties:
+                        anyOf:
+                        - type: string
+                        - items:
+                            type: string
+                          type: array
+                      type: object
+                    - type: 'null'
+                  httpBoundaryRules:
+                    anyOf:
+                    - items:
+                        properties:
+                          action:
+                            enum:
+                            - allow-attack
+                            - allow-auth
+                            - allow-visit
+                            - deny
+                            type: string
+                          filter:
+                            type: string
+                          id:
+                            type: string
+                          includeSubdomains:
+                            type: boolean
+                          type:
+                            enum:
+                            - contains
+                            - exact
+                            - glob
+                            - prefix
+                            - regexp
+                            type: string
+                        required:
+                        - action
+                        - filter
+                        - id
+                        - type
+                        type: object
+                      type: array
+                    - type: 'null'
+                  id:
+                    type: string
+                  lifecycle:
+                    default: active
+                    enum:
+                    - active
+                    - archived
+                    type: string
+                  maxRequestsPerSecond:
+                    anyOf:
+                    - exclusiveMinimum: 0
+                      maximum: 9007199254740991
+                      type: integer
+                    - type: 'null'
+                  name:
+                    type: string
+                  organizationId:
+                    type: string
+                  sku:
+                    default: standard-sku
+                    description: Determines parameters used for assessment
+                    type: string
+                  startUrl:
+                    anyOf:
+                    - format: uri
+                      type: string
+                    - type: 'null'
+                  updatedAt:
+                    format: date-time
+                    type: string
+                required:
+                - approvedTimeWindows
+                - archiveAt
+                - authorizationHeaderDomains
+                - checks
+                - createdAt
+                - credentials
+                - customHeaderDomains
+                - dnsBoundaryRules
+                - headers
+                - httpBoundaryRules
+                - id
+                - lifecycle
+                - maxRequestsPerSecond
+                - name
+                - organizationId
+                - sku
+                - startUrl
+                - updatedAt
+                type: object
+          description: Default Response
+        '400':
+          content:
+            application/json:
+              schema:
+                properties:
+                  code:
+                    description: A constant for machines
+                    enum:
+                    - FST_ERR_VALIDATION
+                    type: string
+                  error:
+                    description: A human readable string for the constant
+                    enum:
+                    - Bad Request
+                    type: string
+                  message:
+                    description: A human readable message
+                    type: string
+                  requestId:
+                    description: A unique identifier for the request
+                    type: string
+                required:
+                - code
+                - error
+                - message
+                - requestId
+                type: object
+          description: Default Response
+        '404':
+          content:
+            application/json:
+              schema:
+                properties:
+                  code:
+                    description: A constant for machines
+                    enum:
+                    - ERR_NOT_FOUND
+                    type: string
+                  error:
+                    description: A human readable string for the constant
+                    enum:
+                    - Not Found
+                    type: string
+                  message:
+                    description: A human readable message
+                    type: string
+                  requestId:
+                    description: A unique identifier for the request
+                    type: string
+                required:
+                - code
+                - error
+                - message
+                - requestId
+                type: object
+          description: The requested resource was not found
+      security:
+      - Authorization: []
+      summary: Get asset
+      tags:
+      - Assets
+    put:
+      description: 'Updates an existing asset.
+
+
+        Any call to this endpoint will trigger checks on new values which may make requests against the asset. Webhook events will be dispatched as checks complete. Changing `startUrl` or `credentials` will trigger a crawl of the asset to discover new DNS boundary rules.'
+      parameters:
+      - in: path
+        name: assetId
+        required: true
+        schema:
+          type: string
+      - description: API version to use for this request
+        in: header
+        name: X-XBOW-API-Version
+        required: true
+        schema:
+          enum:
+          - '2026-07-01'
+          example: '2026-07-01'
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                approvedTimeWindows:
+                  anyOf:
+                  - properties:
+                      entries:
+                        items:
+                          properties:
+                            endTime:
+                              description: End time in HH:mm format
+                              pattern: ^-?\d+(?:\.\d+)?-?\d+(?:\.\d+)?:-?\d+(?:\.\d+)?-?\d+(?:\.\d+)?$
+                              type: string
+                            endWeekday:
+                              description: End day where 1 == Monday, 7 == Sunday
+                              enum:
+                              - 1
+                              - 2
+                              - 3
+                              - 4
+                              - 5
+                              - 6
+                              - 7
+                              type: number
+                            startTime:
+                              description: Start time in HH:mm format
+                              pattern: ^-?\d+(?:\.\d+)?-?\d+(?:\.\d+)?:-?\d+(?:\.\d+)?-?\d+(?:\.\d+)?$
+                              type: string
+                            startWeekday:
+                              description: Start day where 1 == Monday, 7 == Sunday
+                              enum:
+                              - 1
+                              - 2
+                              - 3
+                              - 4
+                              - 5
+                              - 6
+                              - 7
+                              type: number
+                          required:
+                          - endTime
+                          - endWeekday
+                          - startTime
+                          - startWeekday
+                          type: object
+                        type: array
+                      tz:
+                        description: IANA timezone name, e.g. 'Europe/Berlin'
+                        type: string
+                    required:
+                    - entries
+                    - tz
+                    type: object
+                  - type: 'null'
+                authorizationHeaderDomains:
+                  description: 'Controls which domains receive the application''s authorization headers during assessment:
+
+
+                    - `attackable`: `Authorization` headers are only sent to domains with `allow-attack` DNS boundary rules (default)
+
+                    - `all`: `Authorization` headers are also sent to domains with `allow-visit` rules'
+                  enum:
+                  - all
+                  - attackable
+                  type: string
+                credentials:
+                  anyOf:
+                  - items:
+                      properties:
+                        authenticatorUri:
+                          anyOf:
+                          - pattern: ^otpauth:\/\/.*
+                            type: string
+                          - type: 'null'
+                        emailAddress:
+                          anyOf:
+                          - format: email
+                            pattern: ^(?!\.)(?!.*\.\.)([A-Za-z0-9_'+\-\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\-]*\.)+[A-Za-z]{2,}$
+                            type: string
+                          - type: 'null'
+                        id:
+                          type: string
+                        name:
+                          type: string
+                        password:
+                          type: string
+                        type:
+                          enum:
+                          - username-password
+                          type: string
+                        username:
+                          type: string
+                      required:
+                      - id
+                      - name
+                      - password
+                      - type
+                      - username
+                      type: object
+                    type: array
+                  - type: 'null'
+                customHeaderDomains:
+                  description: 'Controls which domains receive the application''s custom headers during assessment:
+
+
+                    - `attackable`: Any custom headers are only sent to domains with `allow-attack` DNS boundary rules (default)
+
+                    - `all`: Any custom headers are also sent to domains with `allow-visit` rules'
+                  enum:
+                  - all
+                  - attackable
+                  type: string
+                dnsBoundaryRules:
+                  anyOf:
+                  - items:
+                      properties:
+                        action:
+                          enum:
+                          - allow-attack
+                          - allow-visit
+                          - deny
+                          type: string
+                        filter:
+                          type: string
+                        id:
+                          type: string
+                        includeSubdomains:
+                          type: boolean
+                        type:
+                          enum:
+                          - glob
+                          type: string
+                      required:
+                      - action
+                      - filter
+                      - id
+                      - type
+                      type: object
+                    type: array
+                  - type: 'null'
+                headers:
+                  anyOf:
+                  - additionalProperties:
+                      anyOf:
+                      - type: string
+                      - items:
+                          type: string
+                        type: array
+                    type: object
+                  - type: 'null'
+                httpBoundaryRules:
+                  anyOf:
+                  - items:
+                      properties:
+                        action:
+                          enum:
+                          - allow-attack
+                          - allow-auth
+                          - allow-visit
+                          - deny
+                          type: string
+                        filter:
+                          type: string
+                        id:
+                          type: string
+                        includeSubdomains:
+                          type: boolean
+                        type:
+                          enum:
+                          - contains
+                          - exact
+                          - glob
+                          - prefix
+                          - regexp
+                          type: string
+                      required:
+                      - action
+                      - filter
+                      - id
+                      - type
+                      type: object
+                    type: array
+                  - type: 'null'
+                maxRequestsPerSecond:
+                  anyOf:
+                  - exclusiveMinimum: 0
+                    maximum: 9007199254740991
+                    type: integer
+                  - type: 'null'
+                name:
+                  type: string
+                sku:
+                  default: standard-sku
+                  description: Determines parameters used for assessment
+                  type: string
+                startUrl:
+                  anyOf:
+                  - format: uri
+                    type: string
+                  - type: 'null'
+              required:
+              - approvedTimeWindows
+              - authorizationHeaderDomains
+              - credentials
+              - customHeaderDomains
+              - dnsBoundaryRules
+              - headers
+              - httpBoundaryRules
+              - maxRequestsPerSecond
+              - name
+              - startUrl
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                example:
+                  approvedTimeWindows:
+                    entries:
+                    - endTime: '17:00'
+                      endWeekday: 1
+                      startTime: 09:00
+                      startWeekday: 1
+                    - endTime: '17:00'
+                      endWeekday: 2
+                      startTime: 09:00
+                      startWeekday: 2
+                    - endTime: '17:00'
+                      endWeekday: 3
+                      startTime: 09:00
+                      startWeekday: 3
+                    - endTime: '17:00'
+                      endWeekday: 4
+                      startTime: 09:00
+                      startWeekday: 4
+                    - endTime: '17:00'
+                      endWeekday: 5
+                      startTime: 09:00
+                      startWeekday: 5
+                    tz: Europe/Berlin
+                  archiveAt: null
+                  authorizationHeaderDomains: attackable
+                  checks:
+                    assetReachable:
+                      error:
+                        status: 401
+                        type: http
+                      message: Start URL is behind Cloudflare Access
+                      state: invalid
+                    credentials:
+                      error: null
+                      message: Credentials valid
+                      state: valid
+                    dnsBoundaryRules:
+                      error: null
+                      message: Waiting for start URL
+                      state: unchecked
+                    updatedAt: '2025-01-01T00:00:00Z'
+                  createdAt: '2025-01-01T00:00:00Z'
+                  credentials:
+                  - authenticatorUri: otpauth://totp/Example:admin?secret=JBSWY3DPEHPK3PXP
+                    emailAddress: null
+                    id: 123e4567-e89b-12d3-a456-426614174004
+                    name: Admin
+                    password: password123
+                    type: username-password
+                    username: admin
+                  customHeaderDomains: attackable
+                  dnsBoundaryRules:
+                  - action: allow-attack
+                    filter: example.com
+                    id: 123e4567-e89b-12d3-a456-426614174002
+                    includeSubdomains: true
+                    type: glob
+                  headers:
+                    X-Multi-Value:
+                    - value1
+                    - value2
+                    X-Single-Value: value1
+                  httpBoundaryRules:
+                  - action: deny
+                    filter: https://example.com/blocked
+                    id: 123e4567-e89b-12d3-a456-426614174003
+                    type: exact
+                  id: 123e4567-e89b-12d3-a456-426614174000
+                  lifecycle: active
+                  maxRequestsPerSecond: 1000
+                  name: Example Target
+                  organizationId: 123e4567-e89b-12d3-a456-426614174001
+                  sku: standard-sku
+                  startUrl: https://example.com
+                  updatedAt: '2025-01-01T00:00:00Z'
+                properties:
+                  approvedTimeWindows:
+                    anyOf:
+                    - properties:
+                        entries:
+                          items:
+                            properties:
+                              endTime:
+                                description: End time in HH:mm format
+                                pattern: ^-?\d+(?:\.\d+)?-?\d+(?:\.\d+)?:-?\d+(?:\.\d+)?-?\d+(?:\.\d+)?$
+                                type: string
+                              endWeekday:
+                                description: End day where 1 == Monday, 7 == Sunday
+                                enum:
+                                - 1
+                                - 2
+                                - 3
+                                - 4
+                                - 5
+                                - 6
+                                - 7
+                                type: number
+                              startTime:
+                                description: Start time in HH:mm format
+                                pattern: ^-?\d+(?:\.\d+)?-?\d+(?:\.\d+)?:-?\d+(?:\.\d+)?-?\d+(?:\.\d+)?$
+                                type: string
+                              startWeekday:
+                                description: Start day where 1 == Monday, 7 == Sunday
+                                enum:
+                                - 1
+                                - 2
+                                - 3
+                                - 4
+                                - 5
+                                - 6
+                                - 7
+                                type: number
+                            required:
+                            - endTime
+                            - endWeekday
+                            - startTime
+                            - startWeekday
+                            type: object
+                          type: array
+                        tz:
+                          description: IANA timezone name, e.g. 'Europe/Berlin'
+                          type: string
+                      required:
+                      - entries
+                      - tz
+                      type: object
+                    - type: 'null'
+                  archiveAt:
+                    anyOf:
+                    - format: date-time
+                      type: string
+                    - type: 'null'
+                    description: When the asset will be (or was) archived
+                  authorizationHeaderDomains:
+                    description: 'Controls which domains receive the application''s authorization headers during assessment:
+
+
+                      - `attackable`: `Authorization` headers are only sent to domains with `allow-attack` DNS boundary rules (default)
+
+                      - `all`: `Authorization` headers are also sent to domains with `allow-visit` rules'
+                    enum:
+                    - all
+                    - attackable
+                    type: string
+                  checks:
+                    properties:
+                      assetReachable:
+                        properties:
+                          error:
+                            anyOf:
+                            - oneOf:
+                              - description: Unable to resolve domain name
+                                properties:
+                                  code:
+                                    type: string
+                                  type:
+                                    enum:
+                                    - dns
+                                    type: string
+                                required:
+                                - code
+                                - type
+                                type: object
+                              - description: Timed out whilst trying to reach the URL
+                                properties:
+                                  type:
+                                    enum:
+                                    - timeout
+                                    type: string
+                                required:
+                                - type
+                                type: object
+                              - description: Unable to connect to site
+                                properties:
+                                  code:
+                                    type: string
+                                  type:
+                                    enum:
+                                    - network
+                                    type: string
+                                required:
+                                - code
+                                - type
+                                type: object
+                              - description: Non 2xx status response received
+                                properties:
+                                  status:
+                                    type: number
+                                  type:
+                                    enum:
+                                    - http
+                                    type: string
+                                required:
+                                - status
+                                - type
+                                type: object
+                              - description: Detected WAF blocking access
+                                properties:
+                                  type:
+                                    enum:
+                                    - waf
+                                    type: string
+                                  wafProvider:
+                                    enum:
+                                    - cloudflare-access
+                                    - cloudflare-challenge
+                                    type: string
+                                required:
+                                - type
+                                type: object
+                            - type: 'null'
+                          message:
+                            type: string
+                          state:
+                            enum:
+                            - checking
+                            - invalid
+                            - unchecked
+                            - valid
+                            type: string
+                        required:
+                        - error
+                        - message
+                        - state
+                        type: object
+                      credentials:
+                        properties:
+                          error:
+                            anyOf:
+                            - properties:
+                                type:
+                                  type: string
+                              required:
+                              - type
+                              type: object
+                            - type: 'null'
+                          message:
+                            type: string
+                          state:
+                            enum:
+                            - checking
+                            - invalid
+                            - unchecked
+                            - valid
+                            type: string
+                        required:
+                        - error
+                        - message
+                        - state
+                        type: object
+                      dnsBoundaryRules:
+                        properties:
+                          error:
+                            anyOf:
+                            - properties:
+                                type:
+                                  type: string
+                              required:
+                              - type
+                              type: object
+                            - type: 'null'
+                          message:
+                            type: string
+                          state:
+                            enum:
+                            - checking
+                            - invalid
+                            - unchecked
+                            - valid
+                            type: string
+                        required:
+                        - error
+                        - message
+                        - state
+                        type: object
+                      updatedAt:
+                        anyOf:
+                        - format: date-time
+                          type: string
+                        - type: 'null'
+                    required:
+                    - assetReachable
+                    - credentials
+                    - dnsBoundaryRules
+                    - updatedAt
+                    type: object
+                  createdAt:
+                    format: date-time
+                    type: string
+                  credentials:
+                    anyOf:
+                    - items:
+                        properties:
+                          authenticatorUri:
+                            anyOf:
+                            - pattern: ^otpauth:\/\/.*
+                              type: string
+                            - type: 'null'
+                          emailAddress:
+                            anyOf:
+                            - format: email
+                              pattern: ^(?!\.)(?!.*\.\.)([A-Za-z0-9_'+\-\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\-]*\.)+[A-Za-z]{2,}$
+                              type: string
+                            - type: 'null'
+                          id:
+                            type: string
+                          name:
+                            type: string
+                          password:
+                            type: string
+                          type:
+                            enum:
+                            - username-password
+                            type: string
+                          username:
+                            type: string
+                        required:
+                        - id
+                        - name
+                        - password
+                        - type
+                        - username
+                        type: object
+                      type: array
+                    - type: 'null'
+                  customHeaderDomains:
+                    description: 'Controls which domains receive the application''s custom headers during assessment:
+
+
+                      - `attackable`: Any custom headers are only sent to domains with `allow-attack` DNS boundary rules (default)
+
+                      - `all`: Any custom headers are also sent to domains with `allow-visit` rules'
+                    enum:
+                    - all
+                    - attackable
+                    type: string
+                  dnsBoundaryRules:
+                    anyOf:
+                    - items:
+                        properties:
+                          action:
+                            enum:
+                            - allow-attack
+                            - allow-visit
+                            - deny
+                            type: string
+                          filter:
+                            type: string
+                          id:
+                            type: string
+                          includeSubdomains:
+                            type: boolean
+                          type:
+                            enum:
+                            - glob
+                            type: string
+                        required:
+                        - action
+                        - filter
+                        - id
+                        - type
+                        type: object
+                      type: array
+                    - type: 'null'
+                  headers:
+                    anyOf:
+                    - additionalProperties:
+                        anyOf:
+                        - type: string
+                        - items:
+                            type: string
+                          type: array
+                      type: object
+                    - type: 'null'
+                  httpBoundaryRules:
+                    anyOf:
+                    - items:
+                        properties:
+                          action:
+                            enum:
+                            - allow-attack
+                            - allow-auth
+                            - allow-visit
+                            - deny
+                            type: string
+                          filter:
+                            type: string
+                          id:
+                            type: string
+                          includeSubdomains:
+                            type: boolean
+                          type:
+                            enum:
+                            - contains
+                            - exact
+                            - glob
+                            - prefix
+                            - regexp
+                            type: string
+                        required:
+                        - action
+                        - filter
+                        - id
+                        - type
+                        type: object
+                      type: array
+                    - type: 'null'
+                  id:
+                    type: string
+                  lifecycle:
+                    default: active
+                    enum:
+                    - active
+                    - archived
+                    type: string
+                  maxRequestsPerSecond:
+                    anyOf:
+                    - exclusiveMinimum: 0
+                      maximum: 9007199254740991
+                      type: integer
+                    - type: 'null'
+                  name:
+                    type: string
+                  organizationId:
+                    type: string
+                  sku:
+                    default: standard-sku
+                    description: Determines parameters used for assessment
+                    type: string
+                  startUrl:
+                    anyOf:
+                    - format: uri
+                      type: string
+                    - type: 'null'
+                  updatedAt:
+                    format: date-time
+                    type: string
+                required:
+                - approvedTimeWindows
+                - archiveAt
+                - authorizationHeaderDomains
+                - checks
+                - createdAt
+                - credentials
+                - customHeaderDomains
+                - dnsBoundaryRules
+                - headers
+                - httpBoundaryRules
+                - id
+                - lifecycle
+                - maxRequestsPerSecond
+                - name
+                - organizationId
+                - sku
+                - startUrl
+                - updatedAt
+                type: object
+          description: Default Response
+        '400':
+          content:
+            application/json:
+              schema:
+                properties:
+                  code:
+                    description: A constant for machines
+                    enum:
+                    - FST_ERR_VALIDATION
+                    type: string
+                  error:
+                    description: A human readable string for the constant
+                    enum:
+                    - Bad Request
+                    type: string
+                  message:
+                    description: A human readable message
+                    type: string
+                  requestId:
+                    description: A unique identifier for the request
+                    type: string
+                required:
+                - code
+                - error
+                - message
+                - requestId
+                type: object
+          description: Default Response
+      security:
+      - Authorization: []
+      summary: Update asset
+      tags:
+      - Assets
+  /api/v1/organizations/{organizationId}/assets:
+    get:
+      description: 'Lists all assets in an organization.
+
+
+        Supports pagination via `limit` and `after` query parameters.'
+      parameters:
+      - in: query
+        name: limit
+        required: false
+        schema:
+          default: 20
+          maximum: 100
+          minimum: 1
+          type: integer
+      - in: query
+        name: after
+        required: false
+        schema:
+          type: string
+      - in: path
+        name: organizationId
+        required: true
+        schema:
+          type: string
+      - description: API version to use for this request
+        in: header
+        name: X-XBOW-API-Version
+        required: true
+        schema:
+          enum:
+          - '2026-07-01'
+          example: '2026-07-01'
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                example:
+                  items:
+                  - createdAt: '2025-01-01T00:00:00Z'
+                    id: 123e4567-e89b-12d3-a456-426614174000
+                    lifecycle: active
+                    name: Example Target
+                    updatedAt: '2025-01-01T00:00:00Z'
+                  nextCursor: eyJjcmVhdGVkQXQiOiIyMDI1LTAxLTAxVDAwOjAwOjAwWiIsImlkIjoiMTIzZTQ1NjctZTg5Yi0xMmQzLWE0NTYtNDI2NjE0MTc0MDAwIn0=
+                properties:
+                  items:
+                    items:
+                      properties:
+                        createdAt:
+                          format: date-time
+                          type: string
+                        id:
+                          type: string
+                        lifecycle:
+                          default: active
+                          enum:
+                          - active
+                          - archived
+                          type: string
+                        name:
+                          type: string
+                        updatedAt:
+                          format: date-time
+                          type: string
+                      required:
+                      - createdAt
+                      - id
+                      - lifecycle
+                      - name
+                      - updatedAt
+                      type: object
+                    type: array
+                  nextCursor:
+                    type: string
+                required:
+                - items
+                type: object
+          description: Default Response
+        '400':
+          content:
+            application/json:
+              schema:
+                properties:
+                  code:
+                    description: A constant for machines
+                    enum:
+                    - FST_ERR_VALIDATION
+                    type: string
+                  error:
+                    description: A human readable string for the constant
+                    enum:
+                    - Bad Request
+                    type: string
+                  message:
+                    description: A human readable message
+                    type: string
+                  requestId:
+                    description: A unique identifier for the request
+                    type: string
+                required:
+                - code
+                - error
+                - message
+                - requestId
+                type: object
+          description: Default Response
+      security:
+      - Authorization: []
+      summary: List assets
+      tags:
+      - Assets
+    post:
+      description: Creates a new asset in an organization. An asset represents a web application to be assessed. They contain boundaries, credentials, etc.
+      parameters:
+      - in: path
+        name: organizationId
+        required: true
+        schema:
+          type: string
+      - description: API version to use for this request
+        in: header
+        name: X-XBOW-API-Version
+        required: true
+        schema:
+          enum:
+          - '2026-07-01'
+          example: '2026-07-01'
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              example:
+                name: Example Target
+                sku: standard-sku
+              properties:
+                name:
+                  type: string
+                sku:
+                  description: Determines parameters used for assessment
+                  type: string
+              required:
+              - name
+              - sku
+              type: object
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                example:
+                  approvedTimeWindows: null
+                  archiveAt: null
+                  authorizationHeaderDomains: attackable
+                  checks:
+                    assetReachable:
+                      error: null
+                      message: Waiting for start URL
+                      state: unchecked
+                    credentials:
+                      error: null
+                      message: Waiting for credentials
+                      state: unchecked
+                    dnsBoundaryRules:
+                      error: null
+                      message: Waiting for start URL
+                      state: unchecked
+                    updatedAt: null
+                  createdAt: '2025-01-01T00:00:00Z'
+                  credentials: null
+                  customHeaderDomains: attackable
+                  dnsBoundaryRules: null
+                  headers: null
+                  httpBoundaryRules: null
+                  id: 123e4567-e89b-12d3-a456-426614174000
+                  lifecycle: active
+                  maxRequestsPerSecond: null
+                  name: Example Target
+                  organizationId: 123e4567-e89b-12d3-a456-426614174001
+                  sku: standard-sku
+                  startUrl: null
+                  updatedAt: '2025-01-01T00:00:00Z'
+                properties:
+                  approvedTimeWindows:
+                    anyOf:
+                    - properties:
+                        entries:
+                          items:
+                            properties:
+                              endTime:
+                                description: End time in HH:mm format
+                                pattern: ^-?\d+(?:\.\d+)?-?\d+(?:\.\d+)?:-?\d+(?:\.\d+)?-?\d+(?:\.\d+)?$
+                                type: string
+                              endWeekday:
+                                description: End day where 1 == Monday, 7 == Sunday
+                                enum:
+                                - 1
+                                - 2
+                                - 3
+                                - 4
+                                - 5
+                                - 6
+                                - 7
+                                type: number
+                              startTime:
+                                description: Start time in HH:mm format
+                                pattern: ^-?\d+(?:\.\d+)?-?\d+(?:\.\d+)?:-?\d+(?:\.\d+)?-?\d+(?:\.\d+)?$
+                                type: string
+                              startWeekday:
+                                description: Start day where 1 == Monday, 7 == Sunday
+                                enum:
+                                - 1
+                                - 2
+                                - 3
+                                - 4
+                                - 5
+                                - 6
+                                - 7
+                                type: number
+                            required:
+                            - endTime
+                            - endWeekday
+                            - startTime
+                            - startWeekday
+                            type: object
+                          type: array
+                        tz:
+                          description: IANA timezone name, e.g. 'Europe/Berlin'
+                          type: string
+                      required:
+                      - entries
+                      - tz
+                      type: object
+                    - type: 'null'
+                  archiveAt:
+                    anyOf:
+                    - format: date-time
+                      type: string
+                    - type: 'null'
+                    description: When the asset will be (or was) archived
+                  authorizationHeaderDomains:
+                    description: 'Controls which domains receive the application''s authorization headers during assessment:
+
+
+                      - `attackable`: `Authorization` headers are only sent to domains with `allow-attack` DNS boundary rules (default)
+
+                      - `all`: `Authorization` headers are also sent to domains with `allow-visit` rules'
+                    enum:
+                    - all
+                    - attackable
+                    type: string
+                  checks:
+                    properties:
+                      assetReachable:
+                        properties:
+                          error:
+                            anyOf:
+                            - oneOf:
+                              - description: Unable to resolve domain name
+                                properties:
+                                  code:
+                                    type: string
+                                  type:
+                                    enum:
+                                    - dns
+                                    type: string
+                                required:
+                                - code
+                                - type
+                                type: object
+                              - description: Timed out whilst trying to reach the URL
+                                properties:
+                                  type:
+                                    enum:
+                                    - timeout
+                                    type: string
+                                required:
+                                - type
+                                type: object
+                              - description: Unable to connect to site
+                                properties:
+                                  code:
+                                    type: string
+                                  type:
+                                    enum:
+                                    - network
+                                    type: string
+                                required:
+                                - code
+                                - type
+                                type: object
+                              - description: Non 2xx status response received
+                                properties:
+                                  status:
+                                    type: number
+                                  type:
+                                    enum:
+                                    - http
+                                    type: string
+                                required:
+                                - status
+                                - type
+                                type: object
+                              - description: Detected WAF blocking access
+                                properties:
+                                  type:
+                                    enum:
+                                    - waf
+                                    type: string
+                                  wafProvider:
+                                    enum:
+                                    - cloudflare-access
+                                    - cloudflare-challenge
+                                    type: string
+                                required:
+                                - type
+                                type: object
+                            - type: 'null'
+                          message:
+                            type: string
+                          state:
+                            enum:
+                            - checking
+                            - invalid
+                            - unchecked
+                            - valid
+                            type: string
+                        required:
+                        - error
+                        - message
+                        - state
+                        type: object
+                      credentials:
+                        properties:
+                          error:
+                            anyOf:
+                            - properties:
+                                type:
+                                  type: string
+                              required:
+                              - type
+                              type: object
+                            - type: 'null'
+                          message:
+                            type: string
+                          state:
+                            enum:
+                            - checking
+                            - invalid
+                            - unchecked
+                            - valid
+                            type: string
+                        required:
+                        - error
+                        - message
+                        - state
+                        type: object
+                      dnsBoundaryRules:
+                        properties:
+                          error:
+                            anyOf:
+                            - properties:
+                                type:
+                                  type: string
+                              required:
+                              - type
+                              type: object
+                            - type: 'null'
+                          message:
+                            type: string
+                          state:
+                            enum:
+                            - checking
+                            - invalid
+                            - unchecked
+                            - valid
+                            type: string
+                        required:
+                        - error
+                        - message
+                        - state
+                        type: object
+                      updatedAt:
+                        anyOf:
+                        - format: date-time
+                          type: string
+                        - type: 'null'
+                    required:
+                    - assetReachable
+                    - credentials
+                    - dnsBoundaryRules
+                    - updatedAt
+                    type: object
+                  createdAt:
+                    format: date-time
+                    type: string
+                  credentials:
+                    anyOf:
+                    - items:
+                        properties:
+                          authenticatorUri:
+                            anyOf:
+                            - pattern: ^otpauth:\/\/.*
+                              type: string
+                            - type: 'null'
+                          emailAddress:
+                            anyOf:
+                            - format: email
+                              pattern: ^(?!\.)(?!.*\.\.)([A-Za-z0-9_'+\-\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\-]*\.)+[A-Za-z]{2,}$
+                              type: string
+                            - type: 'null'
+                          id:
+                            type: string
+                          name:
+                            type: string
+                          password:
+                            type: string
+                          type:
+                            enum:
+                            - username-password
+                            type: string
+                          username:
+                            type: string
+                        required:
+                        - id
+                        - name
+                        - password
+                        - type
+                        - username
+                        type: object
+                      type: array
+                    - type: 'null'
+                  customHeaderDomains:
+                    description: 'Controls which domains receive the application''s custom headers during assessment:
+
+
+                      - `attackable`: Any custom headers are only sent to domains with `allow-attack` DNS boundary rules (default)
+
+                      - `all`: Any custom headers are also sent to domains with `allow-visit` rules'
+                    enum:
+                    - all
+                    - attackable
+                    type: string
+                  dnsBoundaryRules:
+                    anyOf:
+                    - items:
+                        properties:
+                          action:
+                            enum:
+                            - allow-attack
+                            - allow-visit
+                            - deny
+                            type: string
+                          filter:
+                            type: string
+                          id:
+                            type: string
+                          includeSubdomains:
+                            type: boolean
+                          type:
+                            enum:
+                            - glob
+                            type: string
+                        required:
+                        - action
+                        - filter
+                        - id
+                        - type
+                        type: object
+                      type: array
+                    - type: 'null'
+                  headers:
+                    anyOf:
+                    - additionalProperties:
+                        anyOf:
+                        - type: string
+                        - items:
+                            type: string
+                          type: array
+                      type: object
+                    - type: 'null'
+                  httpBoundaryRules:
+                    anyOf:
+                    - items:
+                        properties:
+                          action:
+                            enum:
+                            - allow-attack
+                            - allow-auth
+                            - allow-visit
+                            - deny
+                            type: string
+                          filter:
+                            type: string
+                          id:
+                            type: string
+                          includeSubdomains:
+                            type: boolean
+                          type:
+                            enum:
+                            - contains
+                            - exact
+                            - glob
+                            - prefix
+                            - regexp
+                            type: string
+                        required:
+                        - action
+                        - filter
+                        - id
+                        - type
+                        type: object
+                      type: array
+                    - type: 'null'
+                  id:
+                    type: string
+                  lifecycle:
+                    default: active
+                    enum:
+                    - active
+                    - archived
+                    type: string
+                  maxRequestsPerSecond:
+                    anyOf:
+                    - exclusiveMinimum: 0
+                      maximum: 9007199254740991
+                      type: integer
+                    - type: 'null'
+                  name:
+                    type: string
+                  organizationId:
+                    type: string
+                  sku:
+                    default: standard-sku
+                    description: Determines parameters used for assessment
+                    type: string
+                  startUrl:
+                    anyOf:
+                    - format: uri
+                      type: string
+                    - type: 'null'
+                  updatedAt:
+                    format: date-time
+                    type: string
+                required:
+                - approvedTimeWindows
+                - archiveAt
+                - authorizationHeaderDomains
+                - checks
+                - createdAt
+                - credentials
+                - customHeaderDomains
+                - dnsBoundaryRules
+                - headers
+                - httpBoundaryRules
+                - id
+                - lifecycle
+                - maxRequestsPerSecond
+                - name
+                - organizationId
+                - sku
+                - startUrl
+                - updatedAt
+                type: object
+          description: Default Response
+        '400':
+          content:
+            application/json:
+              schema:
+                properties:
+                  code:
+                    description: A constant for machines
+                    enum:
+                    - FST_ERR_VALIDATION
+                    type: string
+                  error:
+                    description: A human readable string for the constant
+                    enum:
+                    - Bad Request
+                    type: string
+                  message:
+                    description: A human readable message
+                    type: string
+                  requestId:
+                    description: A unique identifier for the request
+                    type: string
+                required:
+                - code
+                - error
+                - message
+                - requestId
+                type: object
+          description: Default Response
+      security:
+      - Authorization: []
+      summary: Create asset
+      tags:
+      - Assets
+components:
+  securitySchemes:
+    Authorization:
+      bearerFormat: API Key
+      description: Authorization header with Bearer token
+      scheme: bearer
+      type: http

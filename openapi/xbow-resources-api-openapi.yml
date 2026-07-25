@@ -1,0 +1,822 @@
+openapi: 3.1.0
+info:
+  description: "\n# Versioning\n\nThe API is in public preview. This is a stable version that exposes the most common functionality of the platform. If your use case is not covered, tell us so that we can prioritize work for future releases.\n\nAll API endpoints require the `X-XBOW-API-Version` header to be set to a supported version. Requests without a version header will be rejected with a `400 Bad Request` response.\n\n## Version Lifecycle\n\nAPI versions follow a `YYYY-MM-DD` naming convention (for example, `2026-04-01`). During the public preview, each version is supported, without breaking changes, for a minimum of 4 months from its release date. The support window for new versions will increase as the API matures.\n\n| Version    | Release Date | End of Life |\n|------------|--------------|-------------|\n| next       | Rolling      | N/A         |\n| 2026-07-01 | 2026-07-01   | 2026-11-01  |\n| 2026-06-01 | 2026-06-01   | 2026-10-01  |\n| 2026-04-01 | 2026-04-01   | 2026-07-01  |\n\n## The \"next\" Version\n\nThe `next` version provides early access to upcoming API changes. Use it in non-production environments to test and prepare for the next stable release.\n\n- Changes are pushed to `next` as they stabilize\n- `next` becomes the next stable version upon release\n- Breaking changes may occur in `next` before a stable release\n\n## End of Life (EOL)\n\nWhen a version reaches its end-of-life date:\n\n- **API requests** to that version will fail with a `400 Bad Request` response\n- **Webhook subscriptions** for that version will stop emitting events\n\nMigrate to a supported version before the EOL date to avoid service disruption. Also update webhooks to a supported version.\n\n## Changes from 2026-06-01 to 2026-07-01\n\n### Finding workflow metadata\n\nFindings now carry customer-controlled workflow metadata, independent of the XBOW-owned lifecycle fields (state, severity, CVSS):\n\n- `externalWorkflowState`: your own tracking state for the finding.\n- `externalTicketReference`: a reference to an external ticket. May only be present alongside an `externalWorkflowState`.\n\nA new endpoint updates these fields:\n\n- `PATCH /api/v1/findings/:findingId` — Update a finding's `externalWorkflowState` and `externalTicketReference`. Omitted fields are left unchanged; send `null` to clear a field.\n\nThese fields also appear in `GET /api/v1/findings/{findingId}`, `GET /api/v1/assets/{assetId}/findings`, and `finding.changed` webhook payloads for subscriptions pinned to `2026-07-01`.\n\n# Accessing the API\n\nThe API is available at `https://console.xbow.com/api/v1/`. All endpoints require authentication via an API key provided in the `Authorization: Bearer <token>` header.\n\n**Note:** For Lightspeed organizations, the API is available in read-only mode. That is, only `GET` endpoints are available.\n\n## Generate a personal access token (PAT)\n\n1. Log into your XBOW dashboard at https://console.xbow.com with administrator access to the organization you want to generate an API key for.\n1. Click your profile icon in the top right corner and select **Settings**.\n1. In the left sidebar, click **Personal Access Tokens**.\n1. Click **Generate new token**.\n1. Provide a name and select the scope for the token, that is, the organization you want to use it with.\n1. Click **Create**.\n1. Copy and securely store your key (it won't be shown again).\n\nStore API keys securely using environment variables or secret managers. Never commit keys to version control. Rotate keys periodically and revoke compromised keys immediately.\n\n## API request headers\n\nAll API requests require two headers: your API key for authentication and the API version you want to use. For example:\n\n```curl\ncurl -X GET \"https://console.xbow.com/api/v1/assets/{assetId}/findings\" \\\n  -H \"Authorization: Bearer YOUR_API_KEY\" \\\n  -H \"X-XBOW-API-Version: 2026-07-01\" \\\n  -H \"Content-Type: application/json\"\n```\n\n## Error responses\n\nIn addition to the responses described with each endpoint, the API may also return the following responses:\n\n- `400 Bad Request`: the request was malformed or contained invalid parameters, including missing version header.\n- `401 Unauthorized`: missing an API key or the provided API key is invalid.\n- `403 Forbidden`: the API key is valid, but the user does not have permission to access the requested resource.\n- `429 Too Many Requests`: exceeded rate limit, try again with exponential backoff.\n- `500 Internal Server Error`: an unexpected error occurred, try again with exponential backoff.\n\nThe error response body will be in the following format:\n\n```json\n{\n  \"code\": \"ERR_ERROR_TYPE\",\n  \"error\": \"Error Type\",\n  \"message\": \"Detailed error message\"\n}\n```\n\n# Pagination & Rate Limiting\n\n## Pagination\n\nList endpoints use cursor-based pagination. Use the `limit` query parameter to control page size (1-100, default 20) and the `after` parameter to fetch subsequent pages using the cursor from a previous response.\n\nResponses include an `items` array and a `nextCursor` field:\n\n```json\n{\n  \"items\": [...],\n  \"nextCursor\": \"eyJpZCI6IjEyMyJ9\"\n}\n```\n\nTo fetch the next page, pass the `nextCursor` value as the `after` parameter in your next request. When `nextCursor` is `null`, there are no more results.\n\n## Rate Limiting\n\nAPI requests are subject to rate limiting. If you receive a `429 Too Many Requests` response, implement exponential backoff before retrying.\n\n"
+  title: XBOW Assessments Resources API
+  version: '2026-07-01'
+servers:
+- description: Default
+  url: https://console.xbow.com/
+- description: Multi SAAS - Europe data resident instance
+  url: https://console.eu.xbow.com/
+- description: Multi SAAS - Asia Pacific data resident instance
+  url: https://console.sg.xbow.com/
+tags:
+- description: "Upload and manage files used in assessments, such as source code archives.\n\nAll endpoints require an _organization_ API key.\n\n## Upload flow\n\nResources use a multipart S3 upload. The full flow is:\n\n1. **Create** — `POST /api/v1/organizations/:organizationId/resources` — initiates an upload and returns a resource ID. Status is `initiated`.\n2. **Get part URLs** — `POST /api/v1/resources/:resourceId/parts` — provide a list of part numbers and receive a corresponding list of presigned S3 `PUT` URLs.\n3. **Upload parts** — `PUT` each part directly to its presigned URL. Save the `ETag` header from each part response.\n4. **Commit** — `POST /api/v1/resources/:resourceId/commit` — submit the part numbers and ETags. Optionally include a `sha256` checksum of the full file for server-side integrity verification. Status moves to `processing`.\n5. **Poll** — `GET /api/v1/resources/:resourceId` — wait until status is `ready` (or `failed`).\n6. **Delete** — `DELETE /api/v1/resources/:resourceId` — the resource can be manually deleted when required. Status moves to `deleted`.\n\nThe maximum part size is 5 GiB. Parts must be at least 5 MiB each, except the final part which may be smaller.\nBreaking large files into multiple parts allows failed parts to be retried individually rather than restarting the entire upload.\n\n## Resource statuses\n\n| Status | Meaning |\n|---|---|\n| `initiated` | Upload in progress — parts not yet committed |\n| `processing` | Commit received — server is validating and storing |\n| `ready` | Available to use in assessments |\n| `failed` | Processing failed — see `statusMessage` for details |\n| `deleted` | Deleted |\n\n## Example\n\nThis snippet shows how to upload an example file named `source.tar.gz` using the API multipart upload feature.\nIt uses the `fetch` API and assumes a Node.js environment with `fs/promises` available.\n\n```typescript\nimport fs from \"node:fs/promises\";\nimport crypto from \"node:crypto\";\nconst BASE = \"https://console.xbow.com\";\nconst ORG_ID = \"your-organization-id\";\nconst API_KEY = \"your-api-key\";\nconst PART_SIZE = 5 * 1024 * 1024; // 5 MiB minimum\nconst API_VERSION = \"next\";\n\nconst headers = { \"Authorization\": `Bearer ${API_KEY}`, \"X-XBOW-API-Version\": `${API_VERSION}` };\n\n// 1. Create resource\nconst created = await fetch(`${BASE}/api/v1/organizations/${ORG_ID}/resources`, {\n  method: \"POST\",\n  headers: { ...headers, \"Content-Type\": \"application/json\" },\n  body: JSON.stringify({ name: \"My source\", fileName: \"source.tar.gz\", type: \"source\" }),\n}).then(r => r.json());\nconst resourceId = created.id;\n\n// 2. Split file into parts and request presigned URLs\nconst file = await fs.readFile(\"source.tar.gz\");\nconst partCount = Math.ceil(file.length / PART_SIZE);\nconst { parts: partUrls } = await fetch(`${BASE}/api/v1/resources/${resourceId}/parts`, {\n  method: \"POST\",\n  headers: { ...headers, \"Content-Type\": \"application/json\" },\n  body: JSON.stringify({ parts: Array.from({ length: partCount }, (_, i) => i + 1) }),\n}).then(r => r.json());\n\n// 3. Upload each part to S3 directly, collect ETags\nconst uploadedParts = await Promise.all(partUrls.map(async ({ partNumber, url }) => {\n  const chunk = file.slice((partNumber - 1) * PART_SIZE, partNumber * PART_SIZE);\n  const res = await fetch(url, { method: \"PUT\", body: chunk });\n  return { partNumber, eTag: res.headers.get(\"ETag\").replaceAll('\"', \"\") };\n}));\n\n// 4. Commit (sha256 is optional but recommended for integrity verification)\nconst sha256 = crypto.createHash(\"sha256\").update(file).digest(\"hex\");\nawait fetch(`${BASE}/api/v1/resources/${resourceId}/commit`, {\n  method: \"POST\",\n  headers: { ...headers, \"Content-Type\": \"application/json\" },\n  body: JSON.stringify({ parts: uploadedParts, sha256 }),\n}).then(r => r.json());\n\n// 5. Poll until ready\nlet resource;\ndo {\n  await new Promise(r => setTimeout(r, 5000));\n  resource = await fetch(`${BASE}/api/v1/resources/${resourceId}`, { headers }).then(r => r.json());\n} while (resource.status === \"processing\" || resource.status === \"initiated\");\n\nif (resource.status !== \"ready\") throw new Error(`Upload failed: ${resource.statusMessage}`);\nconsole.log(\"Resource ready:\", resource.id);\n\n// 6. Delete when no longer required\nawait fetch(`${BASE}/api/v1/resources/${resourceId}`, {\n  method: \"DELETE\",\n  headers,\n});\n```\n"
+  name: Resources
+paths:
+  /api/v1/organizations/{organizationId}/resources:
+    get:
+      description: List resources in an organization.
+      parameters:
+      - in: query
+        name: limit
+        required: false
+        schema:
+          default: 20
+          maximum: 100
+          minimum: 1
+          type: integer
+      - in: query
+        name: after
+        required: false
+        schema:
+          type: string
+      - in: path
+        name: organizationId
+        required: true
+        schema:
+          type: string
+      - description: API version to use for this request
+        in: header
+        name: X-XBOW-API-Version
+        required: true
+        schema:
+          enum:
+          - '2026-07-01'
+          example: '2026-07-01'
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  items:
+                    items:
+                      properties:
+                        createdAt:
+                          format: date-time
+                          type: string
+                        fileName:
+                          type: string
+                        id:
+                          type: string
+                        name:
+                          type: string
+                        sha256:
+                          anyOf:
+                          - type: string
+                          - type: 'null'
+                        sizeBytes:
+                          anyOf:
+                          - type: number
+                          - type: 'null'
+                        status:
+                          enum:
+                          - deleted
+                          - failed
+                          - initiated
+                          - processing
+                          - ready
+                          type: string
+                        statusMessage:
+                          anyOf:
+                          - type: string
+                          - type: 'null'
+                        type:
+                          enum:
+                          - documentation
+                          - report
+                          - source
+                          type: string
+                        updatedAt:
+                          format: date-time
+                          type: string
+                      required:
+                      - createdAt
+                      - fileName
+                      - id
+                      - name
+                      - sha256
+                      - sizeBytes
+                      - status
+                      - statusMessage
+                      - type
+                      - updatedAt
+                      type: object
+                    type: array
+                  nextCursor:
+                    type: string
+                required:
+                - items
+                type: object
+          description: Default Response
+      security:
+      - Authorization: []
+      summary: List resources
+      tags:
+      - Resources
+    post:
+      description: Create a new resource in an organization. For example, source code to be used in an assessment.
+      parameters:
+      - in: path
+        name: organizationId
+        required: true
+        schema:
+          type: string
+      - description: API version to use for this request
+        in: header
+        name: X-XBOW-API-Version
+        required: true
+        schema:
+          enum:
+          - '2026-07-01'
+          example: '2026-07-01'
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              example:
+                fileName: source.tar.gz
+                name: Source code for upcoming release
+                type: source
+              properties:
+                fileName:
+                  type: string
+                name:
+                  type: string
+                type:
+                  enum:
+                  - documentation
+                  - report
+                  - source
+                  type: string
+              required:
+              - fileName
+              - name
+              - type
+              type: object
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                properties:
+                  createdAt:
+                    format: date-time
+                    type: string
+                  fileName:
+                    type: string
+                  id:
+                    type: string
+                  name:
+                    type: string
+                  organizationId:
+                    type: string
+                  type:
+                    enum:
+                    - documentation
+                    - report
+                    - source
+                    type: string
+                  updatedAt:
+                    format: date-time
+                    type: string
+                required:
+                - createdAt
+                - fileName
+                - id
+                - name
+                - organizationId
+                - type
+                - updatedAt
+                type: object
+          description: Default Response
+        '400':
+          content:
+            application/json:
+              schema:
+                properties:
+                  code:
+                    description: A constant for machines
+                    enum:
+                    - FST_ERR_VALIDATION
+                    type: string
+                  error:
+                    description: A human readable string for the constant
+                    enum:
+                    - Bad Request
+                    type: string
+                  message:
+                    description: A human readable message
+                    type: string
+                  requestId:
+                    description: A unique identifier for the request
+                    type: string
+                required:
+                - code
+                - error
+                - message
+                - requestId
+                type: object
+          description: Default Response
+      security:
+      - Authorization: []
+      summary: Create resource
+      tags:
+      - Resources
+  /api/v1/resources/{resourceId}:
+    delete:
+      description: Delete a resource by ID.
+      parameters:
+      - in: path
+        name: resourceId
+        required: true
+        schema:
+          type: string
+      - description: API version to use for this request
+        in: header
+        name: X-XBOW-API-Version
+        required: true
+        schema:
+          enum:
+          - '2026-07-01'
+          example: '2026-07-01'
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  createdAt:
+                    format: date-time
+                    type: string
+                  fileName:
+                    type: string
+                  id:
+                    type: string
+                  name:
+                    type: string
+                  organizationId:
+                    type: string
+                  sha256:
+                    anyOf:
+                    - type: string
+                    - type: 'null'
+                  sizeBytes:
+                    anyOf:
+                    - type: number
+                    - type: 'null'
+                  status:
+                    enum:
+                    - deleted
+                    - failed
+                    - initiated
+                    - processing
+                    - ready
+                    type: string
+                  statusMessage:
+                    anyOf:
+                    - type: string
+                    - type: 'null'
+                  type:
+                    enum:
+                    - documentation
+                    - report
+                    - source
+                    type: string
+                  updatedAt:
+                    format: date-time
+                    type: string
+                required:
+                - createdAt
+                - fileName
+                - id
+                - name
+                - organizationId
+                - sha256
+                - sizeBytes
+                - status
+                - statusMessage
+                - type
+                - updatedAt
+                type: object
+          description: Default Response
+        '404':
+          content:
+            application/json:
+              schema:
+                properties:
+                  code:
+                    description: A constant for machines
+                    enum:
+                    - ERR_NOT_FOUND
+                    type: string
+                  error:
+                    description: A human readable string for the constant
+                    enum:
+                    - Not Found
+                    type: string
+                  message:
+                    description: A human readable message
+                    type: string
+                  requestId:
+                    description: A unique identifier for the request
+                    type: string
+                required:
+                - code
+                - error
+                - message
+                - requestId
+                type: object
+          description: The requested resource was not found
+      security:
+      - Authorization: []
+      summary: Delete resource
+      tags:
+      - Resources
+    get:
+      description: Get a resource by ID.
+      parameters:
+      - in: path
+        name: resourceId
+        required: true
+        schema:
+          type: string
+      - description: API version to use for this request
+        in: header
+        name: X-XBOW-API-Version
+        required: true
+        schema:
+          enum:
+          - '2026-07-01'
+          example: '2026-07-01'
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  createdAt:
+                    format: date-time
+                    type: string
+                  fileName:
+                    type: string
+                  id:
+                    type: string
+                  name:
+                    type: string
+                  organizationId:
+                    type: string
+                  sha256:
+                    anyOf:
+                    - type: string
+                    - type: 'null'
+                  sizeBytes:
+                    anyOf:
+                    - type: number
+                    - type: 'null'
+                  status:
+                    enum:
+                    - deleted
+                    - failed
+                    - initiated
+                    - processing
+                    - ready
+                    type: string
+                  statusMessage:
+                    anyOf:
+                    - type: string
+                    - type: 'null'
+                  type:
+                    enum:
+                    - documentation
+                    - report
+                    - source
+                    type: string
+                  updatedAt:
+                    format: date-time
+                    type: string
+                required:
+                - createdAt
+                - fileName
+                - id
+                - name
+                - organizationId
+                - sha256
+                - sizeBytes
+                - status
+                - statusMessage
+                - type
+                - updatedAt
+                type: object
+          description: Default Response
+        '404':
+          content:
+            application/json:
+              schema:
+                properties:
+                  code:
+                    description: A constant for machines
+                    enum:
+                    - ERR_NOT_FOUND
+                    type: string
+                  error:
+                    description: A human readable string for the constant
+                    enum:
+                    - Not Found
+                    type: string
+                  message:
+                    description: A human readable message
+                    type: string
+                  requestId:
+                    description: A unique identifier for the request
+                    type: string
+                required:
+                - code
+                - error
+                - message
+                - requestId
+                type: object
+          description: The requested resource was not found
+      security:
+      - Authorization: []
+      summary: Get resource
+      tags:
+      - Resources
+  /api/v1/resources/{resourceId}/commit:
+    post:
+      description: Commit a resource after all parts are uploaded.
+      parameters:
+      - in: path
+        name: resourceId
+        required: true
+        schema:
+          type: string
+      - description: API version to use for this request
+        in: header
+        name: X-XBOW-API-Version
+        required: true
+        schema:
+          enum:
+          - '2026-07-01'
+          example: '2026-07-01'
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              example:
+                parts:
+                - eTag: 9b2cf535f27731c974343645a3985328-1
+                  partNumber: 1
+                - eTag: 1b2cf535f27731c974343645a39853aa-2
+                  partNumber: 2
+                sha256: 3a7bd3e2360a3d80d1c8b456426655440c5fbc1bdb1c9aafbf71e913d93
+              properties:
+                parts:
+                  items:
+                    properties:
+                      eTag:
+                        type: string
+                      partNumber:
+                        maximum: 9007199254740991
+                        minimum: -9007199254740991
+                        type: integer
+                    required:
+                    - eTag
+                    - partNumber
+                    type: object
+                  type: array
+                sha256:
+                  type: string
+              required:
+              - parts
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                properties:
+                  createdAt:
+                    format: date-time
+                    type: string
+                  fileName:
+                    type: string
+                  id:
+                    type: string
+                  name:
+                    type: string
+                  organizationId:
+                    type: string
+                  sha256:
+                    anyOf:
+                    - type: string
+                    - type: 'null'
+                  sizeBytes:
+                    anyOf:
+                    - type: number
+                    - type: 'null'
+                  status:
+                    enum:
+                    - deleted
+                    - failed
+                    - initiated
+                    - processing
+                    - ready
+                    type: string
+                  statusMessage:
+                    anyOf:
+                    - type: string
+                    - type: 'null'
+                  type:
+                    enum:
+                    - documentation
+                    - report
+                    - source
+                    type: string
+                  updatedAt:
+                    format: date-time
+                    type: string
+                required:
+                - createdAt
+                - fileName
+                - id
+                - name
+                - organizationId
+                - sha256
+                - sizeBytes
+                - status
+                - statusMessage
+                - type
+                - updatedAt
+                type: object
+          description: Default Response
+        '400':
+          content:
+            application/json:
+              schema:
+                properties:
+                  code:
+                    description: A constant for machines
+                    enum:
+                    - FST_ERR_VALIDATION
+                    type: string
+                  error:
+                    description: A human readable string for the constant
+                    enum:
+                    - Bad Request
+                    type: string
+                  message:
+                    description: A human readable message
+                    type: string
+                  requestId:
+                    description: A unique identifier for the request
+                    type: string
+                required:
+                - code
+                - error
+                - message
+                - requestId
+                type: object
+          description: Default Response
+        '404':
+          content:
+            application/json:
+              schema:
+                properties:
+                  code:
+                    description: A constant for machines
+                    enum:
+                    - ERR_NOT_FOUND
+                    type: string
+                  error:
+                    description: A human readable string for the constant
+                    enum:
+                    - Not Found
+                    type: string
+                  message:
+                    description: A human readable message
+                    type: string
+                  requestId:
+                    description: A unique identifier for the request
+                    type: string
+                required:
+                - code
+                - error
+                - message
+                - requestId
+                type: object
+          description: The requested resource was not found
+        '409':
+          content:
+            application/json:
+              schema:
+                properties:
+                  code:
+                    description: A constant for machines
+                    enum:
+                    - ERR_CONFLICT
+                    type: string
+                  error:
+                    description: A human readable string for the constant
+                    enum:
+                    - Conflict
+                    type: string
+                  message:
+                    description: A human readable message
+                    type: string
+                  requestId:
+                    description: A unique identifier for the request
+                    type: string
+                required:
+                - code
+                - error
+                - message
+                - requestId
+                type: object
+          description: The resource already exists
+      security:
+      - Authorization: []
+      summary: Commit resource
+      tags:
+      - Resources
+  /api/v1/resources/{resourceId}/parts:
+    post:
+      description: Get presigned upload URLs for specific parts of a multipart upload.
+      parameters:
+      - in: path
+        name: resourceId
+        required: true
+        schema:
+          type: string
+      - description: API version to use for this request
+        in: header
+        name: X-XBOW-API-Version
+        required: true
+        schema:
+          enum:
+          - '2026-07-01'
+          example: '2026-07-01'
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              example:
+                parts:
+                - 1
+                - 2
+                - 3
+              properties:
+                parts:
+                  items:
+                    maximum: 9007199254740991
+                    minimum: 1
+                    type: integer
+                  type: array
+              required:
+              - parts
+              type: object
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                example:
+                  parts:
+                  - expiresAt: '2026-05-11T08:14:23.976Z'
+                    partNumber: 1
+                    url: https://presignedurl.amazonaws.com/upload?partNumber=1&uploadId=abc123
+                  storageProtocol: S3
+                properties:
+                  parts:
+                    items:
+                      properties:
+                        expiresAt:
+                          format: date-time
+                          type: string
+                        partNumber:
+                          maximum: 9007199254740991
+                          minimum: -9007199254740991
+                          type: integer
+                        url:
+                          type: string
+                      required:
+                      - expiresAt
+                      - partNumber
+                      - url
+                      type: object
+                    type: array
+                  storageProtocol:
+                    enum:
+                    - S3
+                    type: string
+                required:
+                - parts
+                - storageProtocol
+                type: object
+          description: Default Response
+        '400':
+          content:
+            application/json:
+              schema:
+                properties:
+                  code:
+                    description: A constant for machines
+                    enum:
+                    - FST_ERR_VALIDATION
+                    type: string
+                  error:
+                    description: A human readable string for the constant
+                    enum:
+                    - Bad Request
+                    type: string
+                  message:
+                    description: A human readable message
+                    type: string
+                  requestId:
+                    description: A unique identifier for the request
+                    type: string
+                required:
+                - code
+                - error
+                - message
+                - requestId
+                type: object
+          description: Default Response
+        '404':
+          content:
+            application/json:
+              schema:
+                properties:
+                  code:
+                    description: A constant for machines
+                    enum:
+                    - ERR_NOT_FOUND
+                    type: string
+                  error:
+                    description: A human readable string for the constant
+                    enum:
+                    - Not Found
+                    type: string
+                  message:
+                    description: A human readable message
+                    type: string
+                  requestId:
+                    description: A unique identifier for the request
+                    type: string
+                required:
+                - code
+                - error
+                - message
+                - requestId
+                type: object
+          description: The requested resource was not found
+        '409':
+          content:
+            application/json:
+              schema:
+                properties:
+                  code:
+                    description: A constant for machines
+                    enum:
+                    - ERR_CONFLICT
+                    type: string
+                  error:
+                    description: A human readable string for the constant
+                    enum:
+                    - Conflict
+                    type: string
+                  message:
+                    description: A human readable message
+                    type: string
+                  requestId:
+                    description: A unique identifier for the request
+                    type: string
+                required:
+                - code
+                - error
+                - message
+                - requestId
+                type: object
+          description: The resource already exists
+      security:
+      - Authorization: []
+      summary: Get resource part upload URLs
+      tags:
+      - Resources
+components:
+  securitySchemes:
+    Authorization:
+      bearerFormat: API Key
+      description: Authorization header with Bearer token
+      scheme: bearer
+      type: http

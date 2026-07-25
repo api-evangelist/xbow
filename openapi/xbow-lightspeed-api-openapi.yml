@@ -1,0 +1,233 @@
+openapi: 3.1.0
+info:
+  description: "\n# Versioning\n\nThe API is in public preview. This is a stable version that exposes the most common functionality of the platform. If your use case is not covered, tell us so that we can prioritize work for future releases.\n\nAll API endpoints require the `X-XBOW-API-Version` header to be set to a supported version. Requests without a version header will be rejected with a `400 Bad Request` response.\n\n## Version Lifecycle\n\nAPI versions follow a `YYYY-MM-DD` naming convention (for example, `2026-04-01`). During the public preview, each version is supported, without breaking changes, for a minimum of 4 months from its release date. The support window for new versions will increase as the API matures.\n\n| Version    | Release Date | End of Life |\n|------------|--------------|-------------|\n| next       | Rolling      | N/A         |\n| 2026-07-01 | 2026-07-01   | 2026-11-01  |\n| 2026-06-01 | 2026-06-01   | 2026-10-01  |\n| 2026-04-01 | 2026-04-01   | 2026-07-01  |\n\n## The \"next\" Version\n\nThe `next` version provides early access to upcoming API changes. Use it in non-production environments to test and prepare for the next stable release.\n\n- Changes are pushed to `next` as they stabilize\n- `next` becomes the next stable version upon release\n- Breaking changes may occur in `next` before a stable release\n\n## End of Life (EOL)\n\nWhen a version reaches its end-of-life date:\n\n- **API requests** to that version will fail with a `400 Bad Request` response\n- **Webhook subscriptions** for that version will stop emitting events\n\nMigrate to a supported version before the EOL date to avoid service disruption. Also update webhooks to a supported version.\n\n## Changes from 2026-06-01 to 2026-07-01\n\n### Finding workflow metadata\n\nFindings now carry customer-controlled workflow metadata, independent of the XBOW-owned lifecycle fields (state, severity, CVSS):\n\n- `externalWorkflowState`: your own tracking state for the finding.\n- `externalTicketReference`: a reference to an external ticket. May only be present alongside an `externalWorkflowState`.\n\nA new endpoint updates these fields:\n\n- `PATCH /api/v1/findings/:findingId` — Update a finding's `externalWorkflowState` and `externalTicketReference`. Omitted fields are left unchanged; send `null` to clear a field.\n\nThese fields also appear in `GET /api/v1/findings/{findingId}`, `GET /api/v1/assets/{assetId}/findings`, and `finding.changed` webhook payloads for subscriptions pinned to `2026-07-01`.\n\n# Accessing the API\n\nThe API is available at `https://console.xbow.com/api/v1/`. All endpoints require authentication via an API key provided in the `Authorization: Bearer <token>` header.\n\n**Note:** For Lightspeed organizations, the API is available in read-only mode. That is, only `GET` endpoints are available.\n\n## Generate a personal access token (PAT)\n\n1. Log into your XBOW dashboard at https://console.xbow.com with administrator access to the organization you want to generate an API key for.\n1. Click your profile icon in the top right corner and select **Settings**.\n1. In the left sidebar, click **Personal Access Tokens**.\n1. Click **Generate new token**.\n1. Provide a name and select the scope for the token, that is, the organization you want to use it with.\n1. Click **Create**.\n1. Copy and securely store your key (it won't be shown again).\n\nStore API keys securely using environment variables or secret managers. Never commit keys to version control. Rotate keys periodically and revoke compromised keys immediately.\n\n## API request headers\n\nAll API requests require two headers: your API key for authentication and the API version you want to use. For example:\n\n```curl\ncurl -X GET \"https://console.xbow.com/api/v1/assets/{assetId}/findings\" \\\n  -H \"Authorization: Bearer YOUR_API_KEY\" \\\n  -H \"X-XBOW-API-Version: 2026-07-01\" \\\n  -H \"Content-Type: application/json\"\n```\n\n## Error responses\n\nIn addition to the responses described with each endpoint, the API may also return the following responses:\n\n- `400 Bad Request`: the request was malformed or contained invalid parameters, including missing version header.\n- `401 Unauthorized`: missing an API key or the provided API key is invalid.\n- `403 Forbidden`: the API key is valid, but the user does not have permission to access the requested resource.\n- `429 Too Many Requests`: exceeded rate limit, try again with exponential backoff.\n- `500 Internal Server Error`: an unexpected error occurred, try again with exponential backoff.\n\nThe error response body will be in the following format:\n\n```json\n{\n  \"code\": \"ERR_ERROR_TYPE\",\n  \"error\": \"Error Type\",\n  \"message\": \"Detailed error message\"\n}\n```\n\n# Pagination & Rate Limiting\n\n## Pagination\n\nList endpoints use cursor-based pagination. Use the `limit` query parameter to control page size (1-100, default 20) and the `after` parameter to fetch subsequent pages using the cursor from a previous response.\n\nResponses include an `items` array and a `nextCursor` field:\n\n```json\n{\n  \"items\": [...],\n  \"nextCursor\": \"eyJpZCI6IjEyMyJ9\"\n}\n```\n\nTo fetch the next page, pass the `nextCursor` value as the `after` parameter in your next request. When `nextCursor` is `null`, there are no more results.\n\n## Rate Limiting\n\nAPI requests are subject to rate limiting. If you receive a `429 Too Many Requests` response, implement exponential backoff before retrying.\n\n"
+  title: XBOW Assessments Lightspeed API
+  version: '2026-07-01'
+servers:
+- description: Default
+  url: https://console.xbow.com/
+- description: Multi SAAS - Europe data resident instance
+  url: https://console.eu.xbow.com/
+- description: Multi SAAS - Asia Pacific data resident instance
+  url: https://console.sg.xbow.com/
+tags:
+- description: Endpoints related to Lightspeed assessment requests.
+  name: Lightspeed
+paths:
+  /api/v1/integrations/{integrationId}/lightspeed:
+    post:
+      description: 'Request a Lightspeed assessment.
+
+
+        Requires an _integration_ API key.
+
+
+        Provide `companyInfo` and `contactInfo` to create a new organization, or `organizationId` to add an asset to an existing organization.'
+      parameters:
+      - in: path
+        name: integrationId
+        required: true
+        schema:
+          type: string
+      - description: API version to use for this request
+        in: header
+        name: X-XBOW-API-Version
+        required: true
+        schema:
+          enum:
+          - '2026-07-01'
+          example: '2026-07-01'
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              anyOf:
+              - properties:
+                  asset:
+                    properties:
+                      name:
+                        minLength: 1
+                        type: string
+                      startUrl:
+                        format: uri
+                        type: string
+                    required:
+                    - name
+                    - startUrl
+                    type: object
+                  companyInfo:
+                    properties:
+                      externalId:
+                        minLength: 1
+                        type: string
+                      name:
+                        minLength: 1
+                        type: string
+                    required:
+                    - externalId
+                    - name
+                    type: object
+                  contactInfo:
+                    properties:
+                      email:
+                        format: email
+                        pattern: ^(?!\.)(?!.*\.\.)([A-Za-z0-9_'+\-\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\-]*\.)+[A-Za-z]{2,}$
+                        type: string
+                      firstName:
+                        minLength: 1
+                        type: string
+                      lastName:
+                        minLength: 1
+                        type: string
+                    required:
+                    - email
+                    - firstName
+                    - lastName
+                    type: object
+                required:
+                - asset
+                - companyInfo
+                - contactInfo
+                type: object
+              - properties:
+                  asset:
+                    properties:
+                      name:
+                        minLength: 1
+                        type: string
+                      startUrl:
+                        format: uri
+                        type: string
+                    required:
+                    - name
+                    - startUrl
+                    type: object
+                  organizationId:
+                    type: string
+                required:
+                - asset
+                - organizationId
+                type: object
+              example:
+                asset:
+                  name: Main Website
+                  startUrl: https://www.acme.com
+                companyInfo:
+                  externalId: acme-123
+                  name: Acme Corp
+                contactInfo:
+                  email: jane@acme.com
+                  firstName: Jane
+                  lastName: Doe
+        required: true
+      responses:
+        '202':
+          content:
+            application/json:
+              schema:
+                example:
+                  message: Lightspeed request submitted successfully
+                properties:
+                  message:
+                    type: string
+                required:
+                - message
+                type: object
+          description: Default Response
+        '400':
+          content:
+            application/json:
+              schema:
+                properties:
+                  code:
+                    description: A constant for machines
+                    enum:
+                    - FST_ERR_VALIDATION
+                    type: string
+                  error:
+                    description: A human readable string for the constant
+                    enum:
+                    - Bad Request
+                    type: string
+                  message:
+                    description: A human readable message
+                    type: string
+                  requestId:
+                    description: A unique identifier for the request
+                    type: string
+                required:
+                - code
+                - error
+                - message
+                - requestId
+                type: object
+          description: Default Response
+        '404':
+          content:
+            application/json:
+              schema:
+                properties:
+                  code:
+                    description: A constant for machines
+                    enum:
+                    - ERR_NOT_FOUND
+                    type: string
+                  error:
+                    description: A human readable string for the constant
+                    enum:
+                    - Not Found
+                    type: string
+                  message:
+                    description: A human readable message
+                    type: string
+                  requestId:
+                    description: A unique identifier for the request
+                    type: string
+                required:
+                - code
+                - error
+                - message
+                - requestId
+                type: object
+          description: The requested resource was not found
+        '409':
+          content:
+            application/json:
+              schema:
+                properties:
+                  code:
+                    description: A constant for machines
+                    enum:
+                    - ERR_CONFLICT
+                    type: string
+                  error:
+                    description: A human readable string for the constant
+                    enum:
+                    - Conflict
+                    type: string
+                  message:
+                    description: A human readable message
+                    type: string
+                  requestId:
+                    description: A unique identifier for the request
+                    type: string
+                required:
+                - code
+                - error
+                - message
+                - requestId
+                type: object
+          description: The resource already exists
+      security:
+      - Authorization: []
+      summary: Submit Lightspeed request
+      tags:
+      - Lightspeed
+components:
+  securitySchemes:
+    Authorization:
+      bearerFormat: API Key
+      description: Authorization header with Bearer token
+      scheme: bearer
+      type: http
