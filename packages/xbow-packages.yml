@@ -1,0 +1,21 @@
+generated: '2026-07-21'
+method: searched
+notes: >-
+  No first-party client libraries found. npm search "xbow" returns only
+  third-party/unrelated packages (@xbow/common is an individual's package, not
+  the company). PyPI "xbow" is an unrelated molecular-dynamics tool (Longbow in
+  the cloud). The official GitHub org (github.com/xbow-engineering, verified
+  for xbow.com) publishes no SDK repos — only validation-benchmarks and forks.
+  Docs show raw curl/fetch examples; no SDK pages. XBOW's shipped integrations
+  are the Microsoft Sentinel connector and Security Copilot agents, catalogued
+  in the docs, not package registries.
+searched:
+- registry: npm
+  query: xbow
+  first_party_found: false
+- registry: pypi
+  query: xbow
+  first_party_found: false
+- registry: github.com/xbow-engineering
+  first_party_found: false
+packages: []

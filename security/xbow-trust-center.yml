@@ -1,0 +1,22 @@
+generated: '2026-07-21'
+method: searched
+probe: false
+url: https://trust.xbow.com/
+platform: Vanta trust center (client-rendered; certifications not extractable without JS)
+certifications:
+- SOC 2 Type 1
+- SOC 2 Type 2
+- GDPR
+- HIPAA
+evidence:
+- source: https://docs.xbow.com/console/get-started/trust-and-safety/
+  quote: XBOW is GDPR, SOC 2 Type 1, SOC 2 Type 2, and HIPAA compliant, and regularly conducts audits
+- source: https://trust.xbow.com/
+  keywords: [vanta, trust center]
+notes: >-
+  Data hosted on AWS in the US, with Europe and Singapore data-resident regions
+  in private preview for Enterprise. Encryption at rest AES-256 (AWS KMS,
+  region-scoped), in transit TLS 1.2/1.3; backups encrypted and region-scoped.
+  Organization audit logs available to Enterprise administrators. Data
+  Processing Addendum and Data Management Policy referenced from the
+  trust-and-safety page.

@@ -1,0 +1,73 @@
+# XBOW Console Documentation
+
+> XBOW Console documentation — automated penetration testing for web applications and APIs.
+
+## Get Started
+- [Introduction to XBOW Console](https://docs.xbow.com/console/get-started/introduction/): Learn what to expect from XBOW Console's automated penetration testing and security assessments.
+- [Security expert introduction to XBOW](https://docs.xbow.com/console/get-started/security-expert-introduction/): Overview of advanced XBOW features for security experts: control the attack surface, scope endpoints, guide attack strategies, and validate results with canary tokens.
+- [Enterprise quick start](https://docs.xbow.com/console/get-started/enterprise-quickstart/): Get oriented in XBOW Enterprise: learn what you can do in each role, then follow an assessment from setup through to reviewing results.
+- [Lightspeed quick start](https://docs.xbow.com/console/get-started/lightspeed-quickstart/): Get started with Lightspeed, set up your analysis, and see what vulnerabilities XBOW's penetration testing platform finds.
+- [Trusting XBOW to assess your application](https://docs.xbow.com/console/get-started/trust-and-safety/): Understand how XBOW protects your data, keeps your application safe during an assessment, and meets your governance and visibility needs.
+- [Recent Console changes](https://docs.xbow.com/console/get-started/recent-changes/): Significant changes to the user interface that existing users may find helpful.
+- [About this documentation site](https://docs.xbow.com/console/get-started/about-docs/): What the XBOW Console documentation covers, how it's organized, and how to give feedback.
+
+## Guidance
+- [Choosing a target to test](https://docs.xbow.com/console/guidance/choosing-targets/): Learn which targets are most suited to XBOW penetration testing.
+- [Comparing different types of assessment](https://docs.xbow.com/console/guidance/comparing-test-types/): Understand XBOW assessment types: comprehensive security testing, retest to verify fixes, and how Enterprise users can focus on specific vulnerability classes.
+- [Protecting targets during XBOW testing](https://docs.xbow.com/console/guidance/protecting-targets/): Learn how to configure an assessment for full testing at the same time as protecting your application and users.
+- [Guiding XBOW testing](https://docs.xbow.com/console/guidance/guiding-tests/): Improve XBOW assessment accuracy by uploading source code and documentation for gray-box testing. Learn what to include and exclude from your archive.
+- [Guiding XBOW testing for experts](https://docs.xbow.com/console/guidance/guiding-tests-expert/): Brief XBOW like a human pentester. Enterprise users can use assessment guidance cards to direct testing focus and validate results.
+- [Checking configurations before assessment](https://docs.xbow.com/console/guidance/checking-configuration/): Learn what happens during XBOW's configuration check phase, including target validation, credential verification, and scope discovery.
+- [Interpreting XBOW results](https://docs.xbow.com/console/guidance/interpreting-results/): Understand XBOW security findings, vulnerability classifications, and how to prioritize mitigation based on validated and informational results.
+
+## How To
+- [Define an assessment type](https://docs.xbow.com/console/how-to/define-assessment-type/): Choose between a comprehensive XBOW application assessment and a vulnerability retest. Step-by-step guide for Enterprise users.
+- [Define authentication for testing](https://docs.xbow.com/console/how-to/define-authentication/): Configure test account credentials for XBOW penetration testing. Supported methods include username/password, magic links, MFA with TOTP, and bearer tokens.
+- [Provide XBOW with context to guide testing](https://docs.xbow.com/console/how-to/provide-target-context/): Upload source code and documentation to guide XBOW testing. Enterprise users can also configure detailed assessment guidance.
+- [Configure your server to allow XBOW requests](https://docs.xbow.com/console/how-to/configure-server-access/): Configure your firewall and WAF to allow XBOW penetration testing. Learn about IP allowlisting, custom headers, and WAF bypass options.
+- [Set test execution options](https://docs.xbow.com/console/how-to/set-execution-options/): Align the test execution parameters with your server and security team requirements.
+- [Fix configuration check problems](https://docs.xbow.com/console/how-to/fix-configuration-checks/): Troubleshoot XBOW configuration check issues including target validation, credential verification, and scope discovery problems.
+- [Run assessment](https://docs.xbow.com/console/how-to/run-assessment/): Start your XBOW security assessment after configuring scope and reviewing test parameters.
+- [Monitor assessment](https://docs.xbow.com/console/how-to/monitor-assessment/): Monitor the progress of a running assessment, understand the states it can be in, and resume it if it pauses.
+- [Explore and fix XBOW results](https://docs.xbow.com/console/how-to/explore-and-fix-results/): Explore XBOW security findings, vulnerability classifications, and fix the most severe vulnerabilities.
+- [Validate results with canary tokens](https://docs.xbow.com/console/how-to/validate-with-canaries/): Set up canary tokens in your application to give XBOW verifiable attack targets for business logic flaws, SQL injection, local file read, and remote code execution.
+
+## Reference
+- [Access requirements](https://docs.xbow.com/console/reference/access-requirements/): IP addresses and hostnames used by XBOW for penetration testing. Configure your firewall to allow XBOW access.
+- [Artifacts supported to guide testing](https://docs.xbow.com/console/reference/artifacts/): Reference for XBOW artifact uploads: supported file formats for source code, and for Attack surface, Priorities, and Attack strategy cards.
+- [Attack types](https://docs.xbow.com/console/reference/attack-types/): Reference list of XBOW attack types, including specific vulnerability categories such as SQL injection, XSS, SSRF, and RCE, plus common security checks.
+- [Audit log events](https://docs.xbow.com/console/reference/audit-events/): Reference for events recorded in the XBOW Console audit log, including user actions, configuration changes, and security-relevant activity.
+- [Authentication methods](https://docs.xbow.com/console/reference/authentication-methods/): Methods supported for XBOW to authenticate to access a target and assess it.
+- [Data residency](https://docs.xbow.com/console/reference/data-residency/): Store and process data for your XBOW security assessment in your chosen region. Available regions, data scope, and regional endpoints.
+- [Impact demonstration](https://docs.xbow.com/console/reference/impact-demonstration/): Impact demonstration controls how XBOW explores findings to demonstrate the impact of vulnerabilities it finds.
+- [Protected URLs](https://docs.xbow.com/console/reference/protected-urls/): Find information on protecting sensitive endpoints from attack during assessments.
+- [Risk score](https://docs.xbow.com/console/reference/risk-score/): How XBOW calculates an application's risk score: a count of its open findings, weighted by severity.
+- [Scope configuration](https://docs.xbow.com/console/reference/scope-configuration/): Configure domain scope rules for XBOW penetration testing. Learn about attackable, allow, and blocked domain settings.
+- [Target types](https://docs.xbow.com/console/reference/target-types/): Web applications supported for XBOW penetration testing, including requirements and compatibility considerations.
+- [Troubleshooting assessments](https://docs.xbow.com/console/reference/troubleshooting-assessments/): Understand why an assessment paused and how to fix the problem before you resume, covering authentication, target health, and other pause reasons.
+- [User roles](https://docs.xbow.com/console/reference/user-roles/): Roles available in XBOW with details of the permissions each role grants to organization members.
+- [Vulnerability classification](https://docs.xbow.com/console/reference/vulnerability-classification/): Vulnerabilities detected by XBOW grouped by Common Weakness Enumeration (CWE) classification.
+- [Webhook events](https://docs.xbow.com/console/reference/webhooks/): Reference for XBOW Console webhook subscriptions, including available event types, payload formats, and configuration options for automated notifications.
+
+## Organization Admin
+- [Organization administration overview](https://docs.xbow.com/console/organization-admin/overview/): Overview of organization administration tasks in XBOW Console, including user management, asset management, and event automation.
+- [Manage assets](https://docs.xbow.com/console/organization-admin/manage-assets/): Define new assets to test and edit the name of existing assets.
+- [Manage XBOW users directly](https://docs.xbow.com/console/organization-admin/manage-users/): Invite users to your XBOW Console organization and remove anyone who should no longer have access.
+- [Control access to XBOW](https://docs.xbow.com/console/organization-admin/control-access/): Manage user roles to control what each member can see and do.
+- [Provision users automatically](https://docs.xbow.com/console/organization-admin/provision-users/): Configure XBOW to synchronize groups of users with your identity provider.
+- [Set up single sign-on authentication](https://docs.xbow.com/console/organization-admin/set-up-sso/): Configure single sign-on (SSO) for your XBOW Console organization to manage user authentication through your identity provider (IdP).
+- [Automate XBOW assessments and notifications](https://docs.xbow.com/console/organization-admin/automate-events/): Connect XBOW Console to external systems using the API, webhooks, and Microsoft Sentinel integration to automate data collection, analysis, and notifications.
+
+## Microsoft Integration
+- [XBOW integration with Microsoft Security tools](https://docs.xbow.com/console/microsoft-integration/introduction/): Connect XBOW pentesting data to Microsoft Sentinel and Security Copilot. Query findings alongside your security data and run assessments using natural language.
+- [Deploy the XBOW Sentinel Connector](https://docs.xbow.com/console/microsoft-integration/deploy-data-connector/): Use the XBOW solution to pull results from XBOW Console, add them to your data lake in Microsoft Sentinel, and create alerts for vulnerabilities.
+- [Install the XBOW Pentest Analysis agent](https://docs.xbow.com/console/microsoft-integration/install-pentest-analysis/): Use the analysis agent to get insights directly from XBOW pentesting results in your Log Analytics workspace without writing KQL queries.
+- [Query XBOW findings using Security Copilot](https://docs.xbow.com/console/microsoft-integration/query-findings/): Use the XBOW Pentest Analysis agent in Microsoft Security Copilot to query pentest findings, correlate them with security events, and find evidence of exploitation.
+- [Install the XBOW Pentest Manager Agent](https://docs.xbow.com/console/microsoft-integration/install-pentest-manager/): Use the manager agent to run XBOW pentesting with natural language prompts for Security Copilot.
+- [Run an assessment from Security Copilot](https://docs.xbow.com/console/microsoft-integration/run-assessments/): Run XBOW pentest assessments from Microsoft Security Copilot using the XBOW Pentest Manager Agent and natural language prompts.
+
+## API Reference
+- [XBOW API 2026-07-01](https://docs.xbow.com/api/openapi-2026-07-01.json): OpenAPI 3.1 spec, stable. Rendered docs: https://docs.xbow.com/api/2026-07-01
+- [XBOW API 2026-06-01](https://docs.xbow.com/api/openapi-2026-06-01.json): OpenAPI 3.1 spec, stable. Rendered docs: https://docs.xbow.com/api/2026-06-01
+- [XBOW API 2026-04-01](https://docs.xbow.com/api/openapi-2026-04-01.json): OpenAPI 3.1 spec, stable. Rendered docs: https://docs.xbow.com/api/2026-04-01
+- [XBOW API next](https://docs.xbow.com/api/openapi-next.json): OpenAPI 3.1 spec, preview. Rendered docs: https://docs.xbow.com/api/next

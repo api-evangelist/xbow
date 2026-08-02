@@ -1,0 +1,133 @@
+generated: '2026-07-21'
+method: derived
+status: candidate
+source: openapi/xbow-openapi-original.json
+notes: No official XBOW MCP server was found (mcp.xbow.com unresolvable; no MCP mention in docs). XBOW
+  ships Microsoft Security Copilot agents (Pentest Analysis / Pentest Manager) as its agent surface. Candidate
+  tool list derived from the OpenAPI operations; the spec publishes no operationIds, so tool names are
+  slugified operation summaries and source_operation uses METHOD PATH.
+server:
+  name: xbow
+  transport: http
+  url: null
+tools:
+- name: get_assessment
+  description: Get assessment
+  source_operation: openapi/xbow-openapi-original.json#GET /api/v1/assessments/{assessmentId}
+- name: cancel_assessment
+  description: Cancel assessment
+  source_operation: openapi/xbow-openapi-original.json#POST /api/v1/assessments/{assessmentId}/cancel
+- name: pause_assessment
+  description: Pause assessment
+  source_operation: openapi/xbow-openapi-original.json#POST /api/v1/assessments/{assessmentId}/pause
+- name: request_resume_assessment
+  description: Request resume assessment
+  source_operation: openapi/xbow-openapi-original.json#POST /api/v1/assessments/{assessmentId}/resume
+- name: get_asset
+  description: Get asset
+  source_operation: openapi/xbow-openapi-original.json#GET /api/v1/assets/{assetId}
+- name: update_asset
+  description: Update asset
+  source_operation: openapi/xbow-openapi-original.json#PUT /api/v1/assets/{assetId}
+- name: list_assessments
+  description: List assessments
+  source_operation: openapi/xbow-openapi-original.json#GET /api/v1/assets/{assetId}/assessments
+- name: request_assessment
+  description: Request assessment
+  source_operation: openapi/xbow-openapi-original.json#POST /api/v1/assets/{assetId}/assessments
+- name: list_findings
+  description: List findings
+  source_operation: openapi/xbow-openapi-original.json#GET /api/v1/assets/{assetId}/findings
+- name: list_asset_reports
+  description: List asset reports
+  source_operation: openapi/xbow-openapi-original.json#GET /api/v1/assets/{assetId}/reports
+- name: get_finding
+  description: Get finding
+  source_operation: openapi/xbow-openapi-original.json#GET /api/v1/findings/{findingId}
+- name: update_finding_metadata
+  description: Update finding metadata
+  source_operation: openapi/xbow-openapi-original.json#PATCH /api/v1/findings/{findingId}
+- name: verify_fix
+  description: Verify fix
+  source_operation: openapi/xbow-openapi-original.json#POST /api/v1/findings/{findingId}/verify-fix
+- name: submit_lightspeed_request
+  description: Submit Lightspeed request
+  source_operation: openapi/xbow-openapi-original.json#POST /api/v1/integrations/{integrationId}/lightspeed
+- name: list_organizations
+  description: List organizations
+  source_operation: openapi/xbow-openapi-original.json#GET /api/v1/integrations/{integrationId}/organizations
+- name: create_organization
+  description: Create organization
+  source_operation: openapi/xbow-openapi-original.json#POST /api/v1/integrations/{integrationId}/organizations
+- name: revoke_organization_key
+  description: Revoke organization key
+  source_operation: openapi/xbow-openapi-original.json#DELETE /api/v1/keys/{keyId}
+- name: get_addresses
+  description: Get addresses
+  source_operation: openapi/xbow-openapi-original.json#GET /api/v1/meta/addresses
+- name: get_openapi_specification
+  description: Get OpenAPI specification
+  source_operation: openapi/xbow-openapi-original.json#GET /api/v1/meta/openapi.json
+- name: get_webhook_signing_keys
+  description: Get webhook signing keys
+  source_operation: openapi/xbow-openapi-original.json#GET /api/v1/meta/webhooks-signing-keys
+- name: get_organization
+  description: Get organization
+  source_operation: openapi/xbow-openapi-original.json#GET /api/v1/organizations/{organizationId}
+- name: update_organization
+  description: Update organization
+  source_operation: openapi/xbow-openapi-original.json#PUT /api/v1/organizations/{organizationId}
+- name: list_assets
+  description: List assets
+  source_operation: openapi/xbow-openapi-original.json#GET /api/v1/organizations/{organizationId}/assets
+- name: create_asset
+  description: Create asset
+  source_operation: openapi/xbow-openapi-original.json#POST /api/v1/organizations/{organizationId}/assets
+- name: create_organization_key
+  description: Create organization key
+  source_operation: openapi/xbow-openapi-original.json#POST /api/v1/organizations/{organizationId}/keys
+- name: list_resources
+  description: List resources
+  source_operation: openapi/xbow-openapi-original.json#GET /api/v1/organizations/{organizationId}/resources
+- name: create_resource
+  description: Create resource
+  source_operation: openapi/xbow-openapi-original.json#POST /api/v1/organizations/{organizationId}/resources
+- name: list_webhook_subscriptions
+  description: List webhook subscriptions
+  source_operation: openapi/xbow-openapi-original.json#GET /api/v1/organizations/{organizationId}/webhooks
+- name: create_webhook_subscription
+  description: Create webhook subscription
+  source_operation: openapi/xbow-openapi-original.json#POST /api/v1/organizations/{organizationId}/webhooks
+- name: get_report
+  description: Get report
+  source_operation: openapi/xbow-openapi-original.json#GET /api/v1/reports/{reportId}
+- name: get_report_summary
+  description: Get report summary
+  source_operation: openapi/xbow-openapi-original.json#GET /api/v1/reports/{reportId}/summary
+- name: delete_resource
+  description: Delete resource
+  source_operation: openapi/xbow-openapi-original.json#DELETE /api/v1/resources/{resourceId}
+- name: get_resource
+  description: Get resource
+  source_operation: openapi/xbow-openapi-original.json#GET /api/v1/resources/{resourceId}
+- name: commit_resource
+  description: Commit resource
+  source_operation: openapi/xbow-openapi-original.json#POST /api/v1/resources/{resourceId}/commit
+- name: get_resource_part_upload_urls
+  description: Get resource part upload URLs
+  source_operation: openapi/xbow-openapi-original.json#POST /api/v1/resources/{resourceId}/parts
+- name: delete_webhook_subscription
+  description: Delete webhook subscription
+  source_operation: openapi/xbow-openapi-original.json#DELETE /api/v1/webhooks/{webhookId}
+- name: get_webhook_subscription
+  description: Get webhook subscription
+  source_operation: openapi/xbow-openapi-original.json#GET /api/v1/webhooks/{webhookId}
+- name: update_webhook_subscription
+  description: Update webhook subscription
+  source_operation: openapi/xbow-openapi-original.json#PATCH /api/v1/webhooks/{webhookId}
+- name: list_webhook_subscription_deliveries
+  description: List webhook subscription deliveries
+  source_operation: openapi/xbow-openapi-original.json#GET /api/v1/webhooks/{webhookId}/deliveries
+- name: ping_webhook_subscription
+  description: Ping webhook subscription
+  source_operation: openapi/xbow-openapi-original.json#POST /api/v1/webhooks/{webhookId}/ping

@@ -1,0 +1,30 @@
+generated: '2026-07-21'
+method: searched
+source: openapi/xbow-openapi-original.json
+docs: https://docs.xbow.com/api/#description/accessing-the-api
+summary:
+  types:
+  - http
+  scheme: bearer personal access token (PAT)
+schemes:
+- name: Authorization
+  type: http
+  scheme: bearer
+  bearerFormat: API Key
+  description: Authorization header with Bearer token
+  sources:
+  - openapi/xbow-openapi-original.json
+details:
+  token_type: Personal Access Token, organization-scoped
+  issuance: Console (console.xbow.com) > profile > Settings > Personal Access Tokens >
+    Generate new token; requires organization administrator access; shown once.
+  organization_keys: POST /api/v1/organizations/{organizationId}/keys creates org keys;
+    DELETE /api/v1/keys/{keyId} revokes them.
+  required_headers:
+  - 'Authorization: Bearer <token>'
+  - 'X-XBOW-API-Version: <YYYY-MM-DD>'
+  restrictions: Lightspeed organizations get read-only API access (GET endpoints only).
+  guidance: Store keys in env vars/secret managers, never commit to version control,
+    rotate periodically, revoke compromised keys immediately.
+  console_sso: SSO/SCIM available for Console user auth via customer IdP (Enterprise);
+    not an API auth surface.

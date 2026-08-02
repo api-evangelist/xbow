@@ -1,0 +1,60 @@
+generated: '2026-07-21'
+method: searched
+source: https://docs.xbow.com/api/ (OpenAPI info.description, openapi-2026-07-01.json)
+authentication:
+  style: bearer-api-key
+  header: 'Authorization: Bearer <token>'
+  token_type: personal access token (PAT)
+  token_scope: organization-scoped, generated in Console Settings > Personal Access Tokens
+  notes: Lightspeed organizations get read-only API access (GET endpoints only).
+  see: authentication/xbow-authentication.yml
+versioning:
+  style: date-based version header
+  header: X-XBOW-API-Version
+  format: YYYY-MM-DD (e.g. 2026-07-01), plus rolling `next` preview version
+  required: true
+  missing_header_behavior: 400 Bad Request
+  support_window: minimum 4 months per stable version during public preview
+  see: lifecycle/xbow-lifecycle.yml
+pagination:
+  style: cursor
+  request_params:
+    limit: page size, 1-100, default 20
+    after: cursor from previous response
+  response_fields:
+    items: array of results
+    nextCursor: opaque cursor; null when no more results
+idempotency:
+  supported: false
+  notes: No idempotency-key mechanism is documented in the API reference or OpenAPI.
+error_envelope:
+  format: custom JSON envelope (not RFC 9457 problem+json)
+  fields:
+    code: machine-readable error code (e.g. ERR_ERROR_TYPE)
+    error: error type name
+    message: detailed human-readable message
+  see: errors/xbow-problem-types.yml
+rate_limiting:
+  signaled_by: 429 Too Many Requests
+  guidance: retry with exponential backoff; no documented limit values or headers
+request_tracing:
+  documented: false
+webhooks:
+  delivery: best-effort, no retries on failure
+  signing: Ed25519 signature over timestamp + body
+  headers:
+  - X-Signature-Timestamp
+  - X-Signature-Ed25519
+  public_key_endpoint: GET /api/v1/meta/webhooks-signing-keys
+  replay_protection: verify timestamp within ~±5 minutes
+  versioning: payloads follow the API version pinned on the subscription
+  see: asyncapi/xbow-webhooks.yml
+uploads:
+  style: multipart S3 presigned-URL flow (create -> parts -> PUT parts -> commit -> poll)
+  part_size: 5 MiB minimum per part (except final), 5 GiB maximum
+  integrity: optional sha256 checksum on commit
+data_residency:
+  default: https://console.xbow.com (US)
+  regions:
+  - {region: Europe, url: 'https://console.eu.xbow.com'}
+  - {region: Asia Pacific (Singapore), url: 'https://console.sg.xbow.com'}

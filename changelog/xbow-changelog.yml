@@ -1,0 +1,28 @@
+generated: '2026-07-21'
+method: searched
+source: https://docs.xbow.com/api/#description/version-lifecycle
+scheme: date-based API versions (YYYY-MM-DD) with a rolling `next` preview
+current_version: '2026-07-01'
+console_changes: https://docs.xbow.com/console/get-started/recent-changes/
+entries:
+- version: '2026-07-01'
+  date: '2026-07-01'
+  breaking: false
+  highlights:
+  - 'Finding workflow metadata: new customer-controlled externalWorkflowState and
+    externalTicketReference fields on findings, independent of XBOW-owned
+    lifecycle fields (state, severity, CVSS).'
+  - 'New endpoint: PATCH /api/v1/findings/:findingId updates externalWorkflowState
+    and externalTicketReference (omitted fields unchanged; null clears).'
+  - New fields appear in finding reads and finding.changed webhook payloads for
+    subscriptions pinned to 2026-07-01.
+- version: '2026-06-01'
+  date: '2026-06-01'
+  breaking: false
+  highlights:
+  - Stable version; supported until 2026-10-01.
+- version: '2026-04-01'
+  date: '2026-04-01'
+  breaking: false
+  highlights:
+  - Initial public-preview stable version; end of life 2026-07-01.

@@ -1,0 +1,31 @@
+generated: '2026-07-21'
+method: searched
+notes: >-
+  No real /.well-known/ documents were found. xbow.com and docs.xbow.com return
+  404 for every probed path. console.xbow.com returns HTTP 200 with the SPA
+  HTML shell for ALL paths (catch-all route), so its 200s are soft-404s — no
+  actual well-known documents exist there; none were saved. The vulnerability
+  disclosure policy lives at https://xbow.com/security-policy instead of
+  security.txt.
+hosts:
+- host: https://xbow.com
+  documents:
+  - {path: /.well-known/security.txt, status: 404}
+  - {path: /.well-known/openid-configuration, status: 404}
+  - {path: /.well-known/oauth-authorization-server, status: 404}
+  - {path: /.well-known/api-catalog, status: 404}
+  - {path: /.well-known/ai-plugin.json, status: 404}
+- host: https://docs.xbow.com
+  documents:
+  - {path: /.well-known/security.txt, status: 404}
+  - {path: /.well-known/openid-configuration, status: 404}
+  - {path: /.well-known/oauth-authorization-server, status: 404}
+  - {path: /.well-known/api-catalog, status: 404}
+  - {path: /.well-known/ai-plugin.json, status: 404}
+- host: https://console.xbow.com
+  documents:
+  - {path: /.well-known/security.txt, status: 200, soft_404: true, note: SPA HTML shell, not a security.txt}
+  - {path: /.well-known/openid-configuration, status: 200, soft_404: true, note: SPA HTML shell, not JSON}
+  - {path: /.well-known/oauth-authorization-server, status: 200, soft_404: true, note: SPA HTML shell, not JSON}
+  - {path: /.well-known/api-catalog, status: 200, soft_404: true, note: SPA HTML shell, not a catalog}
+  - {path: /.well-known/ai-plugin.json, status: 200, soft_404: true, note: SPA HTML shell, not JSON}

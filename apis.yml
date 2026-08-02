@@ -1,27 +1,563 @@
 aid: xbow
 name: Xbow
-description: 'Xbow is a company surfaced as a portfolio company of northzone and added to the API Evangelist
-  network as a stub for enrichment. Sector: enterprise; ai. This profile is a lead awaiting the enrichment
-  pipeline.'
+description: >-
+  XBOW is an autonomous offensive security platform that uses AI to perform
+  penetration testing with real exploit validation — it identifies
+  vulnerabilities, chains them into attack paths, and proves exploitability
+  before findings reach security teams. The XBOW API (public preview) exposes
+  the full platform workflow: register assets, launch and manage assessments,
+  fetch validated findings and reports, upload source-code resources for
+  gray-box testing, and subscribe webhooks with Ed25519-signed deliveries.
+  XBOW has ranked #1 on the HackerOne and Microsoft MSRC leaderboards and is
+  used by 150+ security teams.
 url: https://raw.githubusercontent.com/api-evangelist/xbow/refs/heads/main/apis.yml
+accessModel:
+  pricing: unknown
+  onboarding: self-serve
+  trial: false
+  try_now: false
+  public: false
+  label: Self-serve signup
+  confidence: medium
+  source:
+  - authentication
+  generated: '2026-07-22'
+  method: derived
+image: https://docs.xbow.com/xbow-logomark.svg
 x-type: company
 x-source: vc-portfolio
+x-enrichment:
+  date: '2026-07-21'
+  status: enriched
+  artifacts_added: 22
+  pass: local-v1
 x-backed-by:
 - northzone
-x-tier: stub
-x-tier-reason: portfolio-lead
 specificationVersion: '0.20'
 created: '2026-07-17'
-modified: '2026-07-17'
+modified: '2026-07-21'
 tags:
-- Company
-- Enterprise; Ai
-apis: []
+- Security
+- Penetration Testing
+- Offensive Security
+- Artificial Intelligence
+- Vulnerability Management
+- Cybersecurity
+- Application Security
+apis:
+- aid: xbow:xbow-assessments-api
+  name: Xbow Assessments API
+  description: >-
+    Endpoints related to assessments for assets.
+
+
+    All endpoints require an _organization_ API key.
+  humanURL: https://docs.xbow.com/api/
+  baseURL: https://console.xbow.com/api/v1
+  tags:
+  - Assessments
+  properties:
+  - type: OpenAPI
+    url: openapi/xbow-assessments-api-openapi.yml
+  - type: Documentation
+    url: https://docs.xbow.com/api/
+- aid: xbow:xbow-assets-api
+  name: Xbow Assets API
+  description: >-
+    Endpoints related to assets within an organization.
+
+
+    All endpoints require an _organization_ API key.
+  humanURL: https://docs.xbow.com/api/
+  baseURL: https://console.xbow.com/api/v1
+  tags:
+  - Assets
+  properties:
+  - type: OpenAPI
+    url: openapi/xbow-assets-api-openapi.yml
+  - type: Documentation
+    url: https://docs.xbow.com/api/
+- aid: xbow:xbow-findings-api
+  name: Xbow Findings API
+  description: >-
+    Endpoints for viewing and managing findings.
+
+
+    All endpoints require an _organization_ API key.
+  humanURL: https://docs.xbow.com/api/
+  baseURL: https://console.xbow.com/api/v1
+  tags:
+  - Findings
+  properties:
+  - type: OpenAPI
+    url: openapi/xbow-findings-api-openapi.yml
+  - type: Documentation
+    url: https://docs.xbow.com/api/
+- aid: xbow:xbow-lightspeed-api
+  name: Xbow Lightspeed API
+  description: Endpoints related to Lightspeed assessment requests.
+  humanURL: https://docs.xbow.com/api/
+  baseURL: https://console.xbow.com/api/v1
+  tags:
+  - Lightspeed
+  properties:
+  - type: OpenAPI
+    url: openapi/xbow-lightspeed-api-openapi.yml
+  - type: Documentation
+    url: https://docs.xbow.com/api/
+- aid: xbow:xbow-meta-api
+  name: Xbow Meta API
+  description: Instance metadata endpoints.
+  humanURL: https://docs.xbow.com/api/
+  baseURL: https://console.xbow.com/api/v1
+  tags:
+  - Meta
+  properties:
+  - type: OpenAPI
+    url: openapi/xbow-meta-api-openapi.yml
+  - type: Documentation
+    url: https://docs.xbow.com/api/
+- aid: xbow:xbow-organizations-api
+  name: Xbow Organizations API
+  description: Endpoints related to organizations and their management.
+  humanURL: https://docs.xbow.com/api/
+  baseURL: https://console.xbow.com/api/v1
+  tags:
+  - Organizations
+  properties:
+  - type: OpenAPI
+    url: openapi/xbow-organizations-api-openapi.yml
+  - type: Documentation
+    url: https://docs.xbow.com/api/
+- aid: xbow:xbow-reports-api
+  name: Xbow Reports API
+  description: >-
+    Endpoints for downloading and viewing reports.
+
+
+    All endpoints require an _organization_ API key.
+  humanURL: https://docs.xbow.com/api/
+  baseURL: https://console.xbow.com/api/v1
+  tags:
+  - Reports
+  properties:
+  - type: OpenAPI
+    url: openapi/xbow-reports-api-openapi.yml
+  - type: Documentation
+    url: https://docs.xbow.com/api/
+- aid: xbow:xbow-resources-api
+  name: Xbow Resources API
+  description: >-
+    Upload and manage files used in assessments, such as source code archives.
+
+
+    All endpoints require an _organization_ API key.
+
+
+    ## Upload flow
+
+
+    Resources use a multipart S3 upload. The full flow is:
+
+
+    1. **Create** — `POST /api/v1/organizations/:organizationId/resources` — initiates an upload and returns
+    a resource ID. Status is `initiated`.
+
+    2. **Get part URLs** — `POST /api/v1/resources/:resourceId/parts` — provide a list of part numbers
+    and receive a corresponding list of presigned S3 `PUT` URLs.
+
+    3. **Upload parts** — `PUT` each part directly to its presigned URL. Save the `ETag` header from each
+    part response.
+
+    4. **Commit** — `POST /api/v1/resources/:resourceId/commit` — submit the part numbers and ETags. Optionally
+    include a `sha256` checksum of the full file for server-side integrity verification. Status moves
+    to `processing`.
+
+    5. **Poll** — `GET /api/v1/resources/:resourceId` — wait until status is `ready` (or `failed`).
+
+    6. **Delete** — `DELETE /api/v1/resources/:resourceId` — the resource can be manually deleted when
+    required. Status moves to `deleted`.
+
+
+    The maximum part size is 5 GiB. Parts must be at least 5 MiB each, except the final part which may
+    be smaller.
+
+    Breaking large files into multiple parts allows failed parts to be retried individually rather than
+    restarting the entire upload.
+
+
+    ## Resource statuses
+
+
+    | Status | Meaning |
+
+    |---|---|
+
+    | `initiated` | Upload in progress — parts not yet committed |
+
+    | `processing` | Commit received — server is validating and storing |
+
+    | `ready` | Available to use in assessments |
+
+    | `failed` | Processing failed — see `statusMessage` for details |
+
+    | `deleted` | Deleted |
+
+
+    ## Example
+
+
+    This snippet shows how to upload an example file named `source.tar.gz` using the API multipart upload
+    feature.
+
+    It uses the `fetch` API and assumes a Node.js environment with `fs/promises` available.
+
+
+    ```typescript
+
+    import fs from "node:fs/promises";
+
+    import crypto from "node:crypto";
+
+    const BASE = "https://console.xbow.com";
+
+    const ORG_ID = "your-organization-id";
+
+    const API_KEY = "your-api-key";
+
+    const PART_SIZE = 5 * 1024 * 1024; // 5 MiB minimum
+
+    const API_VERSION = "next";
+
+
+    const headers = { "Authorization": `Bearer ${API_KEY}`, "X-XBOW-API-Version": `${API_VERSION}` };
+
+
+    // 1. Create resource
+
+    const created = await fetch(`${BASE}/api/v1/organizations/${ORG_ID}/resources`, {
+      method: "POST",
+      headers: { ...headers, "Content-Type": "application/json" },
+      body: JSON.stringify({ name: "My source", fileName: "source.tar.gz", type: "source" }),
+    }).then(r => r.json());
+
+    const resourceId = created.id;
+
+
+    // 2. Split file into parts and request presigned URLs
+
+    const file = await fs.readFile("source.tar.gz");
+
+    const partCount = Math.ceil(file.length / PART_SIZE);
+
+    const { parts: partUrls } = await fetch(`${BASE}/api/v1/resources/${resourceId}/parts`, {
+      method: "POST",
+      headers: { ...headers, "Content-Type": "application/json" },
+      body: JSON.stringify({ parts: Array.from({ length: partCount }, (_, i) => i + 1) }),
+    }).then(r => r.json());
+
+
+    // 3. Upload each part to S3 directly, collect ETags
+
+    const uploadedParts = await Promise.all(partUrls.map(async ({ partNumber, url }) => {
+      const chunk = file.slice((partNumber - 1) * PART_SIZE, partNumber * PART_SIZE);
+      const res = await fetch(url, { method: "PUT", body: chunk });
+      return { partNumber, eTag: res.headers.get("ETag").replaceAll('"', "") };
+    }));
+
+
+    // 4. Commit (sha256 is optional but recommended for integrity verification)
+
+    const sha256 = crypto.createHash("sha256").update(file).digest("hex");
+
+    await fetch(`${BASE}/api/v1/resources/${resourceId}/commit`, {
+      method: "POST",
+      headers: { ...headers, "Content-Type": "application/json" },
+      body: JSON.stringify({ parts: uploadedParts, sha256 }),
+    }).then(r => r.json());
+
+
+    // 5. Poll until ready
+
+    let resource;
+
+    do {
+      await new Promise(r => setTimeout(r, 5000));
+      resource = await fetch(`${BASE}/api/v1/resources/${resourceId}`, { headers }).then(r => r.json());
+    } while (resource.status === "processing" || resource.status === "initiated");
+
+
+    if (resource.status !== "ready") throw new Error(`Upload failed: ${resource.statusMessage}`);
+
+    console.log("Resource ready:", resource.id);
+
+
+    // 6. Delete when no longer required
+
+    await fetch(`${BASE}/api/v1/resources/${resourceId}`, {
+      method: "DELETE",
+      headers,
+    });
+
+    ```
+  humanURL: https://docs.xbow.com/api/
+  baseURL: https://console.xbow.com/api/v1
+  tags:
+  - Resources
+  properties:
+  - type: OpenAPI
+    url: openapi/xbow-resources-api-openapi.yml
+  - type: Documentation
+    url: https://docs.xbow.com/api/
+- aid: xbow:xbow-webhooks-api
+  name: Xbow Webhooks API
+  description: >-
+    Manage webhook subscriptions and receive event notifications.
+
+
+    When creating an organization, you may provide an HTTPS webhook URL to receive events related to the
+    organization's resources.
+
+
+    We implement _best-effort_ delivery of events, soon after they occur. We will not retry delivery if
+    it fails for any reason.
+
+
+    ## Webhook Versioning
+
+
+    Webhook payloads follow the API version of the subscription. When a version reaches its end-of-life
+    date, webhook subscriptions for that version will stop emitting events. Ensure your integration is
+    updated to a supported version before the EOL date.
+
+
+    ## Signature Verification
+
+
+    Each request will be a `POST` request sent with the following headers:
+
+    * `X-Signature-Timestamp`: A Unix timestamp in seconds.
+
+    * `X-Signature-Ed25519`: An hex string representing an Ed25519 signature of the concatenation of the
+    timestamp and the request body, signed with XBOW's private key.
+
+
+    You must verify the signature using the public key from the `GET /api/v1/meta/webhooks-signing-keys`
+    endpoint.
+
+    You must verify that the timestamp is within a valid range from the current time to prevent replay
+    attacks. An example of a valid range might be +/-5 minutes.
+
+    You should respond with a 2xx status code if the signature is valid, and a 401 status code otherwise.
+
+    Before organization creation, we will send two test `ping` events. One signed with XBOW's private
+    key, and one signed with an invalid key. This allows you to verify that your signature verification
+    is working correctly.
+
+
+    For example, if you're using Node.js:
+
+
+    ```javascript
+
+    import consumers from "node:stream/consumers";
+
+
+    // Fetch the public key from the API (cache this - it rarely changes)
+
+    const keysResponse = await fetch("https://console.xbow.com/api/v1/meta/webhooks-signing-keys", {
+      headers: { Authorization: "Bearer your-api-key", "X-XBOW-API-Version": "2026-02-01" }
+    });
+
+    const keys = await keysResponse.json();
+
+    const publicKeyBase64 = keys[0].publicKey;
+
+
+    // Import the public key (SPKI format, base64-encoded)
+
+    const publicKey = await crypto.subtle.importKey(
+      "spki",
+      Buffer.from(publicKeyBase64, "base64"),
+      { name: "Ed25519" },
+      false,
+      ["verify"],
+    );
+
+
+    const timestamp = req.headers["x-signature-timestamp"];
+
+    const timestampTime = parseInt(timestamp, 10);
+
+    const now = Math.floor(Date.now() / 1000);
+
+    const isValidTimestamp = (Math.abs(now - timestampTime) < 300);
+
+
+    if (!isValidTimestamp) {
+      throw new Error("Invalid timestamp");
+    }
+
+
+    const signature = req.headers["x-signature-ed25519"];
+
+    const body = await consumers.text(req.body);
+
+    const isVerified = await crypto.subtle.verify(
+      { name: "Ed25519" },
+      publicKey,
+      Buffer.from(signature, "hex"),
+      Buffer.from(timestamp + body),
+    );
+
+
+    if (!isVerified) {
+      throw new Error("Invalid request signature");
+    }
+
+    ```
+
+
+    ## Upgrading webhook subscriptions
+
+
+    Each subscription is pinned to an API version. When we release a new version, you should plan to migrate
+    your subscriptions to it. Once a version reaches its end-of-life date we stop emitting events for
+    subscriptions on that version, so an unmigrated subscription will silently stop receiving deliveries.
+
+
+    Upgrading is a single `PATCH` per subscription. The snippet below lists every subscription on your
+    organization, bumps any pinned to a given older version to a specified newer one, and skips subscriptions
+    on `next` (which track the latest stable version automatically). It uses cursor pagination so it works
+    for organizations with any number of subscriptions.
+
+
+    ```typescript
+
+    // Upgrade webhook subscriptions from 2026-02-01 -> 2026-04-01. Skip "next".
+
+    const BASE = "https://console.xbow.com";
+
+    const ORG_ID = "your-organization-id";
+
+    const API_KEY = "your-api-key";
+
+    const OLD = "2026-02-01";
+
+    const NEW = "2026-04-01";
+
+
+    const headers = { Authorization: `Bearer ${API_KEY}`, "X-XBOW-API-Version": NEW };
+
+
+    async function* paginate<T>(url: string): AsyncGenerator<T> {
+      let cursor: string | null = null;
+      do {
+        const u = new URL(url);
+        if (cursor) u.searchParams.set("cursor", cursor);
+        const res = await fetch(u, { headers });
+        if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
+        const page = (await res.json()) as { items: T[]; nextCursor: string | null };
+        yield* page.items;
+        cursor = page.nextCursor;
+      } while (cursor);
+    }
+
+
+    type Sub = { id: string; apiVersion: string };
+
+    for await (const wh of paginate<Sub>(`${BASE}/api/v1/organizations/${ORG_ID}/webhooks`)) {
+      if (wh.apiVersion === "next") { console.log(`skip   ${wh.id} (next)`); continue; }
+      if (wh.apiVersion !== OLD)    { console.log(`skip   ${wh.id} (${wh.apiVersion})`); continue; }
+      const res = await fetch(`${BASE}/api/v1/webhooks/${wh.id}`, {
+        method: "PATCH",
+        headers: { ...headers, "Content-Type": "application/json" },
+        body: JSON.stringify({ apiVersion: NEW }),
+      });
+      if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
+      console.log(`bump   ${wh.id} ${OLD} -> ${NEW}`);
+    }
+
+    ```
+
+
+    An `apiVersion`-only `PATCH` does not re-validate your endpoint, so the upgrade is cheap and safe
+    to run for many subscriptions at once. A `PATCH` that changes `targetUrl` does re-send the validation
+    pings described above, and must receive a 2xx for the valid ping to succeed.
+  humanURL: https://docs.xbow.com/api/
+  baseURL: https://console.xbow.com/api/v1
+  tags:
+  - Webhooks
+  properties:
+  - type: OpenAPI
+    url: openapi/xbow-webhooks-api-openapi.yml
+  - type: Documentation
+    url: https://docs.xbow.com/api/
 maintainers:
 - FN: Kin Lane
   email: kin@apievangelist.com
 - FN: APIs.json
   email: info@apis.io
 common:
+- type: AgenticAccess
+  url: agentic-access/xbow-agentic-access.yml
+- type: VulnerabilityDisclosure
+  url: security/xbow-vulnerability-disclosure.yml
+- type: DomainSecurity
+  url: security/xbow-domain-security.yml
+- type: Authentication
+  url: authentication/xbow-authentication.yml
 - type: Website
   url: https://xbow.com
+- type: DeveloperPortal
+  url: https://docs.xbow.com/
+- type: Documentation
+  url: https://docs.xbow.com/
+- type: APIReference
+  url: https://docs.xbow.com/api/
+- type: GettingStarted
+  url: https://docs.xbow.com/console/get-started/introduction/
+- type: Support
+  url: mailto:support@xbow.com
+- type: Blog
+  url: https://xbow.com/blog
+- type: GitHubOrganization
+  url: https://github.com/xbow-engineering
+- type: Pricing
+  url: https://xbow.com/pricing
+- type: Login
+  url: https://console.xbow.com/
+- type: TermsOfService
+  url: https://xbow.com/terms-of-use
+- type: PrivacyPolicy
+  url: https://xbow.com/privacy-policy
+- type: StatusPage
+  url: https://status.xbow.com
+- type: TrustCenter
+  url: https://trust.xbow.com/
+- type: Compliance
+  url: https://docs.xbow.com/console/get-started/trust-and-safety/
+- type: Security
+  url: https://xbow.com/security-policy
+- type: Deprecation
+  url: https://docs.xbow.com/api/#description/version-lifecycle
+- type: LLMsTxt
+  url: llms/xbow-llms.txt
+- type: MCPServer
+  url: mcp/xbow-mcp.yml
+- type: Webhooks
+  url: asyncapi/xbow-webhooks.yml
+- type: ChangeLog
+  url: changelog/xbow-changelog.yml
+- type: Conventions
+  url: conventions/xbow-conventions.yml
+- type: ErrorCatalog
+  url: errors/xbow-problem-types.yml
+- type: Lifecycle
+  url: lifecycle/xbow-lifecycle.yml
+- type: Conformance
+  url: conformance/xbow-conformance.yml
+- type: DataModel
+  url: data-model/xbow-data-model.yml
+- type: AgentSkill
+  url: skills/_index.yml

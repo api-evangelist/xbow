@@ -1,0 +1,34 @@
+generated: '2026-07-21'
+method: derived
+source: openapi/xbow-openapi-original.json + https://docs.xbow.com/api/ (Error responses)
+format: custom-envelope
+envelope:
+  content_type: application/json
+  fields:
+    code: machine-readable error code string (e.g. ERR_ERROR_TYPE)
+    error: error type name
+    message: detailed error message
+problems:
+- status: 400
+  title: Bad Request
+  detail: Request malformed or contains invalid parameters, including a missing
+    or unsupported X-XBOW-API-Version header (also returned for end-of-life versions).
+- status: 401
+  title: Unauthorized
+  detail: Missing API key or the provided API key is invalid.
+- status: 403
+  title: Forbidden
+  detail: API key valid but the user lacks permission for the requested resource
+    (e.g. write endpoints with a read-only Lightspeed organization key).
+- status: 404
+  title: Not Found
+  detail: The requested resource was not found.
+- status: 409
+  title: Conflict
+  detail: The resource already exists (returned by resource-creation endpoints).
+- status: 429
+  title: Too Many Requests
+  detail: Rate limit exceeded; retry with exponential backoff.
+- status: 500
+  title: Internal Server Error
+  detail: Unexpected error; retry with exponential backoff.

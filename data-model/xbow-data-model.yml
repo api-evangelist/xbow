@@ -1,0 +1,45 @@
+generated: '2026-07-21'
+method: derived
+source: openapi/xbow-openapi-original.json (paths + tag descriptions; spec uses inline schemas, no components.schemas)
+entities:
+- name: organization
+  id_param: organizationId
+  description: Tenant that owns assets, keys, resources, and webhook subscriptions.
+- name: asset
+  id_param: assetId
+  description: A target application registered for testing (formerly "target").
+- name: assessment
+  id_param: assessmentId
+  description: A pentest run against an asset; can be requested, paused, resumed, cancelled.
+- name: finding
+  id_param: findingId
+  description: A validated vulnerability. XBOW-owned lifecycle fields (state, severity,
+    CVSS) plus customer-controlled externalWorkflowState / externalTicketReference.
+- name: report
+  id_param: reportId
+  description: Assessment report; PDF content and markdown summary endpoints.
+- name: resource
+  id_param: resourceId
+  description: Uploaded file (e.g. source-code archive) used to guide assessments;
+    multipart S3 upload lifecycle initiated -> processing -> ready/failed/deleted.
+- name: key
+  id_param: keyId
+  description: Organization API key.
+- name: webhook
+  id_param: webhookId
+  description: Webhook subscription pinned to an API version; has deliveries.
+- name: integration
+  id_param: integrationId
+  description: Partner/MSSP integration surface (Lightspeed requests, managed organizations).
+relationships:
+- {from: organization, to: asset, kind: has_many, via: 'GET/POST /api/v1/organizations/{organizationId}/assets'}
+- {from: organization, to: key, kind: has_many, via: 'POST /api/v1/organizations/{organizationId}/keys'}
+- {from: organization, to: resource, kind: has_many, via: 'GET/POST /api/v1/organizations/{organizationId}/resources'}
+- {from: organization, to: webhook, kind: has_many, via: 'GET/POST /api/v1/organizations/{organizationId}/webhooks'}
+- {from: asset, to: assessment, kind: has_many, via: 'GET/POST /api/v1/assets/{assetId}/assessments'}
+- {from: asset, to: finding, kind: has_many, via: 'GET /api/v1/assets/{assetId}/findings'}
+- {from: asset, to: report, kind: has_many, via: 'GET /api/v1/assets/{assetId}/reports'}
+- {from: webhook, to: delivery, kind: has_many, via: 'GET /api/v1/webhooks/{webhookId}/deliveries'}
+- {from: integration, to: organization, kind: has_many, via: 'GET/POST /api/v1/integrations/{integrationId}/organizations'}
+- {from: finding, to: asset, kind: belongs_to, via: assetId}
+- {from: assessment, to: asset, kind: belongs_to, via: assetId}

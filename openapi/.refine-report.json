@@ -1,0 +1,30 @@
+{
+  "provider": "xbow",
+  "sources": [
+    "xbow-assessments-api-openapi.yml",
+    "xbow-assets-api-openapi.yml",
+    "xbow-findings-api-openapi.yml",
+    "xbow-lightspeed-api-openapi.yml",
+    "xbow-meta-api-openapi.yml",
+    "xbow-organizations-api-openapi.yml",
+    "xbow-reports-api-openapi.yml",
+    "xbow-resources-api-openapi.yml",
+    "xbow-webhooks-api-openapi.yml"
+  ],
+  "outputs": [
+    "xbow-assessments-api-openapi.yml",
+    "xbow-assets-api-openapi.yml",
+    "xbow-findings-api-openapi.yml",
+    "xbow-lightspeed-api-openapi.yml",
+    "xbow-meta-api-openapi.yml",
+    "xbow-organizations-api-openapi.yml",
+    "xbow-reports-api-openapi.yml",
+    "xbow-resources-api-openapi.yml",
+    "xbow-webhooks-api-openapi.yml"
+  ],
+  "archived": [],
+  "errors": [],
+  "warnings": [],
+  "notes": [],
+  "skipped": []
+}

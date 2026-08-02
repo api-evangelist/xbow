@@ -1,0 +1,30 @@
+overlay: 1.0.0
+info:
+  title: API Evangelist enhancements for the XBOW API
+  version: 1.0.0
+extends: openapi/xbow-openapi-original.json
+x-generated: '2026-07-21'
+x-method: generated
+actions:
+- target: $.info
+  update:
+    x-apievangelist:
+      provider: xbow
+      profile: https://raw.githubusercontent.com/api-evangelist/xbow/refs/heads/main/apis.yml
+      artifacts:
+        authentication: authentication/xbow-authentication.yml
+        conventions: conventions/xbow-conventions.yml
+        errors: errors/xbow-problem-types.yml
+        lifecycle: lifecycle/xbow-lifecycle.yml
+        webhooks: asyncapi/xbow-webhooks.yml
+        data-model: data-model/xbow-data-model.yml
+- target: $.info
+  update:
+    x-apievangelist-notes:
+    - The spec publishes no operationIds; tooling that needs stable ids should key on METHOD + path.
+    - All requests require the X-XBOW-API-Version header (400 without it); current stable is 2026-07-01.
+    - Errors use a custom {code, error, message} envelope rather than RFC 9457 problem+json.
+    - Webhook deliveries are best-effort with no retries; verify Ed25519 signatures via /api/v1/meta/webhooks-signing-keys.
+- target: $.servers
+  update:
+  - x-apievangelist-data-residency: EU and Singapore instances are private-preview, Enterprise only.

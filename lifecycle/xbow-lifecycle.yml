@@ -1,0 +1,29 @@
+generated: '2026-07-21'
+method: searched
+source: https://docs.xbow.com/api/#description/version-lifecycle
+versioning:
+  scheme: date-based header (X-XBOW-API-Version, YYYY-MM-DD)
+  current: '2026-07-01'
+  preview: next
+  docs: https://docs.xbow.com/api/#description/version-lifecycle
+  versions:
+  - {version: next, released: rolling, eol: null, notes: early access to upcoming changes; breaking changes possible}
+  - {version: '2026-07-01', released: '2026-07-01', eol: '2026-11-01'}
+  - {version: '2026-06-01', released: '2026-06-01', eol: '2026-10-01'}
+  - {version: '2026-04-01', released: '2026-04-01', eol: '2026-07-01'}
+deprecation:
+  policy_url: https://docs.xbow.com/api/#description/version-lifecycle
+  policy: >-
+    Each stable version is supported without breaking changes for a minimum of
+    4 months from release during the public preview. After end-of-life, API
+    requests to that version fail with 400 Bad Request and webhook
+    subscriptions pinned to it stop emitting events.
+  sunset_header: false
+status_page: https://status.xbow.com
+status_page_platform: incident.io
+status_page_components: [Console, Assessments]
+sla: null
+deprecated_operations: []
+notes: >-
+  The API is in public preview. The docs webhook reference marks the
+  target.changed webhook event as deprecated (legacy alias for asset.changed).

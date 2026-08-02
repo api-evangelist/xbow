@@ -1,0 +1,33 @@
+generated: '2026-07-21'
+method: generated
+notes: Grounded in openapi/xbow-openapi-original.json (spec publishes no operationIds;
+  operations referenced as METHOD + path, each verified against the spec).
+skills:
+- file: xbow-run-assessment.md
+  name: Run an XBOW assessment and collect validated findings
+  api: openapi/xbow-openapi-original.json
+  operations:
+  - POST /api/v1/assets/{assetId}/assessments
+  - GET /api/v1/assessments/{assessmentId}
+  - GET /api/v1/assets/{assetId}/findings
+  - GET /api/v1/assets/{assetId}/reports
+- file: xbow-webhook-subscription.md
+  name: Subscribe to XBOW webhooks with verified signatures
+  api: openapi/xbow-openapi-original.json
+  operations:
+  - POST /api/v1/organizations/{organizationId}/webhooks
+  - GET /api/v1/meta/webhooks-signing-keys
+  - PATCH /api/v1/webhooks/{webhookId}
+- file: xbow-upload-source-resource.md
+  name: Upload source code to guide gray-box testing
+  api: openapi/xbow-openapi-original.json
+  operations:
+  - POST /api/v1/organizations/{organizationId}/resources
+  - POST /api/v1/resources/{resourceId}/parts
+  - POST /api/v1/resources/{resourceId}/commit
+- file: xbow-findings-workflow.md
+  name: Sync XBOW findings into an external ticketing workflow
+  api: openapi/xbow-openapi-original.json
+  operations:
+  - PATCH /api/v1/findings/{findingId}
+  - POST /api/v1/findings/{findingId}/verify-fix

@@ -1,0 +1,45 @@
+generated: '2026-07-21'
+method: derived
+source: openapi/xbow-openapi-original.json + https://docs.xbow.com/console/get-started/trust-and-safety/
+standards:
+- id: oauth2
+  conforms: false
+  evidence: single http bearer securityScheme (API-key PAT); no oauth2 flows declared
+- id: oidc
+  conforms: false
+  evidence: no openIdConnect scheme; /.well-known/openid-configuration not served
+    (console.xbow.com returns SPA shell for all paths). SSO via customer IdP is a
+    Console feature, not an API surface.
+- id: rfc9457-problem-details
+  conforms: false
+  evidence: errors use a custom {code, error, message} JSON envelope, not application/problem+json
+- id: cursor-pagination
+  conforms: true
+  evidence: list endpoints use limit/after params with items/nextCursor response fields
+- id: idempotency
+  conforms: false
+  evidence: no idempotency-key mechanism documented
+- id: date-based-versioning
+  conforms: true
+  evidence: required X-XBOW-API-Version header, YYYY-MM-DD versions with published EOL dates
+- id: rfc8594-sunset-header
+  conforms: false
+  evidence: version EOL published in docs table; no Sunset header documented
+- id: ed25519-webhook-signatures
+  conforms: true
+  evidence: webhook deliveries signed via X-Signature-Ed25519 + X-Signature-Timestamp,
+    keys from GET /api/v1/meta/webhooks-signing-keys
+- id: openapi-3.1
+  conforms: true
+  evidence: published spec at https://docs.xbow.com/api/openapi-2026-07-01.json declares openapi 3.1.0
+compliance_program:
+  source: https://docs.xbow.com/console/get-started/trust-and-safety/
+  claims:
+  - SOC 2 Type 1
+  - SOC 2 Type 2
+  - GDPR
+  - HIPAA
+  trust_center: https://trust.xbow.com/
+  encryption:
+    at_rest: AES-256 via AWS KMS, region-scoped keys
+    in_transit: TLS 1.2/1.3

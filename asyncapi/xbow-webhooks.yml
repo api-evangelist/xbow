@@ -1,0 +1,44 @@
+generated: '2026-07-21'
+method: searched
+source: https://docs.xbow.com/console/reference/webhooks/ + openapi/xbow-openapi-original.json (webhooks section)
+type: Webhooks
+notes: >-
+  XBOW publishes no AsyncAPI document; this captures the documented webhook
+  surface. The OpenAPI 3.1 spec declares the webhook operations in its
+  `webhooks` section (saved verbatim in openapi/xbow-openapi-original.json).
+delivery:
+  transport: HTTPS POST to subscribed endpoint
+  guarantee: best-effort, delivered soon after the event; no retries on failure
+  versioning: payloads follow the API version pinned on the subscription; EOL versions stop emitting
+signing:
+  algorithm: Ed25519
+  headers:
+  - name: X-Signature-Timestamp
+    description: Unix timestamp (seconds)
+  - name: X-Signature-Ed25519
+    description: hex Ed25519 signature of timestamp + request body
+  public_keys: GET /api/v1/meta/webhooks-signing-keys
+  replay_protection: reject timestamps outside ~±5 minutes
+  validation_pings: two test ping events on setup — one validly signed, one signed with an invalid key
+events:
+- name: asset.changed
+  description: Properties of an asset change (for example credentials or approved testing window).
+- name: assessment.changed
+  description: Status of an assessment changes; useful for completed/failed notifications.
+- name: finding.changed
+  description: State of a finding changes (for example open to fixed).
+- name: challenge.changed
+  description: Challenge state changes (declared in the OpenAPI webhooks section).
+- name: ping
+  description: Sent when a new subscription is defined or triggered manually for testing.
+- name: target.changed
+  description: Deprecated — legacy alias for asset.changed.
+  deprecated: true
+management_endpoints:
+- GET /api/v1/organizations/{organizationId}/webhooks
+- POST /api/v1/organizations/{organizationId}/webhooks
+- GET /api/v1/webhooks/{webhookId}
+- PATCH /api/v1/webhooks/{webhookId}
+- DELETE /api/v1/webhooks/{webhookId}
+- GET /api/v1/webhooks/{webhookId}/deliveries
+- POST /api/v1/webhooks/{webhookId}/ping
