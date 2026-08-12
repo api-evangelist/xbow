@@ -499,6 +499,8 @@ maintainers:
 - FN: APIs.json
   email: info@apis.io
 common:
+- type: Overlay
+  url: overlays/xbow-openapi-overlay.yaml
 - type: AgenticAccess
   url: agentic-access/xbow-agentic-access.yml
 - type: VulnerabilityDisclosure
