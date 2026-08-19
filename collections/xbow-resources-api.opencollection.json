@@ -1,0 +1,208 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "XBOW Assessments Resources API",
+    "version": "2026-07-01"
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Resources",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "List resources",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://console.xbow.com/api/v1/organizations/:organizationId/resources",
+            "headers": [
+              {
+                "name": "X-XBOW-API-Version",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "limit",
+                "value": "",
+                "type": "query"
+              },
+              {
+                "name": "after",
+                "value": "",
+                "type": "query"
+              },
+              {
+                "name": "organizationId",
+                "value": "",
+                "type": "path"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "List resources in an organization."
+        },
+        {
+          "info": {
+            "name": "Create resource",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://console.xbow.com/api/v1/organizations/:organizationId/resources",
+            "headers": [
+              {
+                "name": "X-XBOW-API-Version",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "organizationId",
+                "value": "",
+                "type": "path"
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            },
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "Create a new resource in an organization. For example, source code to be used in an assessment."
+        },
+        {
+          "info": {
+            "name": "Get resource",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://console.xbow.com/api/v1/resources/:resourceId",
+            "headers": [
+              {
+                "name": "X-XBOW-API-Version",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "resourceId",
+                "value": "",
+                "type": "path"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "Get a resource by ID."
+        },
+        {
+          "info": {
+            "name": "Delete resource",
+            "type": "http"
+          },
+          "http": {
+            "method": "DELETE",
+            "url": "https://console.xbow.com/api/v1/resources/:resourceId",
+            "headers": [
+              {
+                "name": "X-XBOW-API-Version",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "resourceId",
+                "value": "",
+                "type": "path"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "Delete a resource by ID."
+        },
+        {
+          "info": {
+            "name": "Commit resource",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://console.xbow.com/api/v1/resources/:resourceId/commit",
+            "headers": [
+              {
+                "name": "X-XBOW-API-Version",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "resourceId",
+                "value": "",
+                "type": "path"
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            },
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "Commit a resource after all parts are uploaded."
+        },
+        {
+          "info": {
+            "name": "Get resource part upload URLs",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://console.xbow.com/api/v1/resources/:resourceId/parts",
+            "headers": [
+              {
+                "name": "X-XBOW-API-Version",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "resourceId",
+                "value": "",
+                "type": "path"
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            },
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "Get presigned upload URLs for specific parts of a multipart upload."
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

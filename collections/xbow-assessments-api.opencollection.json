@@ -1,0 +1,200 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "XBOW Assessments API",
+    "version": "2026-07-01"
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Assessments",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Get assessment",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://console.xbow.com/api/v1/assessments/:assessmentId",
+            "headers": [
+              {
+                "name": "X-XBOW-API-Version",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "assessmentId",
+                "value": "",
+                "type": "path"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "Gets a specific assessment."
+        },
+        {
+          "info": {
+            "name": "Cancel assessment",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://console.xbow.com/api/v1/assessments/:assessmentId/cancel",
+            "headers": [
+              {
+                "name": "X-XBOW-API-Version",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "assessmentId",
+                "value": "",
+                "type": "path"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "Cancels a running assessment. If the assessment is already cancelled, this will have no effect."
+        },
+        {
+          "info": {
+            "name": "Pause assessment",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://console.xbow.com/api/v1/assessments/:assessmentId/pause",
+            "headers": [
+              {
+                "name": "X-XBOW-API-Version",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "assessmentId",
+                "value": "",
+                "type": "path"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "Pauses a running assessment. If the assessment is already paused, this will have no effect."
+        },
+        {
+          "info": {
+            "name": "Request resume assessment",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://console.xbow.com/api/v1/assessments/:assessmentId/resume",
+            "headers": [
+              {
+                "name": "X-XBOW-API-Version",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "assessmentId",
+                "value": "",
+                "type": "path"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "Requests that a paused assessment be resumed. The assessment will be queued, and start as soon as possible. If the assessment is already running, this will have no effect."
+        },
+        {
+          "info": {
+            "name": "List assessments",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://console.xbow.com/api/v1/assets/:assetId/assessments",
+            "headers": [
+              {
+                "name": "X-XBOW-API-Version",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "limit",
+                "value": "",
+                "type": "query"
+              },
+              {
+                "name": "after",
+                "value": "",
+                "type": "query"
+              },
+              {
+                "name": "assetId",
+                "value": "",
+                "type": "path"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "Lists assessments for an asset.\n\nSupports pagination via `limit` and `after` query parameters."
+        },
+        {
+          "info": {
+            "name": "Request assessment",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://console.xbow.com/api/v1/assets/:assetId/assessments",
+            "headers": [
+              {
+                "name": "X-XBOW-API-Version",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "assetId",
+                "value": "",
+                "type": "path"
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            },
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "Queues an assessment on an asset. The assessment will be started as soon as possible. Requires all fields on the asset be defined and checked."
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

@@ -131,3 +131,9 @@ tools:
 - name: ping_webhook_subscription
   description: Ping webhook subscription
   source_operation: openapi/xbow-openapi-original.json#POST /api/v1/webhooks/{webhookId}/ping
+deployment:
+  mode: none
+  verified: derived
+  tools: 40
+  checked: '2026-08-12'
+  source: catalog MCP census

@@ -1,0 +1,81 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "XBOW Assessments Meta API",
+    "version": "2026-07-01"
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Meta",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Get addresses",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://console.xbow.com/api/v1/meta/addresses",
+            "headers": [
+              {
+                "name": "X-XBOW-API-Version",
+                "value": ""
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "Returns the public IP addresses used by XBOW. Allowlist these IPs to allow XBOW traffic.\n`agents` are the IPs used by XBOW agents when performing an assessment."
+        },
+        {
+          "info": {
+            "name": "Get OpenAPI specification",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://console.xbow.com/api/v1/meta/openapi.json",
+            "headers": [
+              {
+                "name": "X-XBOW-API-Version",
+                "value": ""
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "Returns the OpenAPI specification in JSON format for the API version specified in the X-XBOW-API-Version header.\n\nRequires an organization API key. This may be made public in the future."
+        },
+        {
+          "info": {
+            "name": "Get webhook signing keys",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://console.xbow.com/api/v1/meta/webhooks-signing-keys",
+            "headers": [
+              {
+                "name": "X-XBOW-API-Version",
+                "value": ""
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "Returns the public keys used to sign webhook requests. Use these keys to verify webhook signatures.\n\nThe array supports key rotation - during rotation, multiple keys may be active."
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

@@ -1,0 +1,208 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "XBOW Assessments Organizations API",
+    "version": "2026-07-01"
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Organizations",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "List organizations",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://console.xbow.com/api/v1/integrations/:integrationId/organizations",
+            "headers": [
+              {
+                "name": "X-XBOW-API-Version",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "limit",
+                "value": "",
+                "type": "query"
+              },
+              {
+                "name": "after",
+                "value": "",
+                "type": "query"
+              },
+              {
+                "name": "integrationId",
+                "value": "",
+                "type": "path"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "Lists all organizations for an integration.\n\nRequires an _integration_ API key.\n\nSupports pagination via `limit` and `after` query parameters."
+        },
+        {
+          "info": {
+            "name": "Create organization",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://console.xbow.com/api/v1/integrations/:integrationId/organizations",
+            "headers": [
+              {
+                "name": "X-XBOW-API-Version",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "integrationId",
+                "value": "",
+                "type": "path"
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            },
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "Creates a new organization. This is required before setting up an asset.\n\nRequires an _integration_ API key."
+        },
+        {
+          "info": {
+            "name": "Revoke organization key",
+            "type": "http"
+          },
+          "http": {
+            "method": "DELETE",
+            "url": "https://console.xbow.com/api/v1/keys/:keyId",
+            "headers": [
+              {
+                "name": "X-XBOW-API-Version",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "keyId",
+                "value": "",
+                "type": "path"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "Revokes an existing API key for an organization.\n\nRequires an _integration_ API key."
+        },
+        {
+          "info": {
+            "name": "Get organization",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://console.xbow.com/api/v1/organizations/:organizationId",
+            "headers": [
+              {
+                "name": "X-XBOW-API-Version",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "organizationId",
+                "value": "",
+                "type": "path"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "Retrieves a specific organization by ID.\n\nAccepts either an _integration_ API key or an _organization_ API key."
+        },
+        {
+          "info": {
+            "name": "Update organization",
+            "type": "http"
+          },
+          "http": {
+            "method": "PUT",
+            "url": "https://console.xbow.com/api/v1/organizations/:organizationId",
+            "headers": [
+              {
+                "name": "X-XBOW-API-Version",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "organizationId",
+                "value": "",
+                "type": "path"
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            },
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "Updates an existing organization.\n\nRequires an _integration_ API key."
+        },
+        {
+          "info": {
+            "name": "Create organization key",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://console.xbow.com/api/v1/organizations/:organizationId/keys",
+            "headers": [
+              {
+                "name": "X-XBOW-API-Version",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "organizationId",
+                "value": "",
+                "type": "path"
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            },
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "Creates a new API key for an organization in an integration. \n\nRequires an _integration_ API key."
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

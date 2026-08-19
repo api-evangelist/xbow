@@ -1,0 +1,148 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "XBOW Assessments Assets API",
+    "version": "2026-07-01"
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Assets",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Get asset",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://console.xbow.com/api/v1/assets/:assetId",
+            "headers": [
+              {
+                "name": "X-XBOW-API-Version",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "assetId",
+                "value": "",
+                "type": "path"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "Gets a specific asset by ID."
+        },
+        {
+          "info": {
+            "name": "Update asset",
+            "type": "http"
+          },
+          "http": {
+            "method": "PUT",
+            "url": "https://console.xbow.com/api/v1/assets/:assetId",
+            "headers": [
+              {
+                "name": "X-XBOW-API-Version",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "assetId",
+                "value": "",
+                "type": "path"
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            },
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "Updates an existing asset.\n\nAny call to this endpoint will trigger checks on new values which may make requests against the asset. Webhook events will be dispatched as checks complete. Changing `startUrl` or `credentials` will trigger a crawl of the asset to discover new DNS boundary rules."
+        },
+        {
+          "info": {
+            "name": "List assets",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://console.xbow.com/api/v1/organizations/:organizationId/assets",
+            "headers": [
+              {
+                "name": "X-XBOW-API-Version",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "limit",
+                "value": "",
+                "type": "query"
+              },
+              {
+                "name": "after",
+                "value": "",
+                "type": "query"
+              },
+              {
+                "name": "organizationId",
+                "value": "",
+                "type": "path"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "Lists all assets in an organization.\n\nSupports pagination via `limit` and `after` query parameters."
+        },
+        {
+          "info": {
+            "name": "Create asset",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://console.xbow.com/api/v1/organizations/:organizationId/assets",
+            "headers": [
+              {
+                "name": "X-XBOW-API-Version",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "organizationId",
+                "value": "",
+                "type": "path"
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            },
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "Creates a new asset in an organization. An asset represents a web application to be assessed. They contain boundaries, credentials, etc."
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

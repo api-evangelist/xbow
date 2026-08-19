@@ -1,0 +1,1731 @@
+{
+  "item": [
+    {
+      "id": "09df8b41-8943-494f-81f1-ca5a3c14b73d",
+      "name": "Webhooks",
+      "description": {
+        "content": "Manage webhook subscriptions and receive event notifications.\n\nWhen creating an organization, you may provide an HTTPS webhook URL to receive events related to the organization's resources.\n\nWe implement _best-effort_ delivery of events, soon after they occur. We will not retry delivery if it fails for any reason.\n\n## Webhook Versioning\n\nWebhook payloads follow the API version of the subscription. When a version reaches its end-of-life date, webhook subscriptions for that version will stop emitting events. Ensure your integration is updated to a supported version before the EOL date.\n\n## Signature Verification\n\nEach request will be a `POST` request sent with the following headers:\n* `X-Signature-Timestamp`: A Unix timestamp in seconds.\n* `X-Signature-Ed25519`: An hex string representing an Ed25519 signature of the concatenation of the timestamp and the request body, signed with XBOW's private key.\n\nYou must verify the signature using the public key from the `GET /api/v1/meta/webhooks-signing-keys` endpoint.\nYou must verify that the timestamp is within a valid range from the current time to prevent replay attacks. An example of a valid range might be +/-5 minutes.\nYou should respond with a 2xx status code if the signature is valid, and a 401 status code otherwise.\nBefore organization creation, we will send two test `ping` events. One signed with XBOW's private key, and one signed with an invalid key. This allows you to verify that your signature verification is working correctly.\n\nFor example, if you're using Node.js:\n\n```javascript\nimport consumers from \"node:stream/consumers\";\n\n// Fetch the public key from the API (cache this - it rarely changes)\nconst keysResponse = await fetch(\"https://console.xbow.com/api/v1/meta/webhooks-signing-keys\", {\n  headers: { Authorization: \"Bearer your-api-key\", \"X-XBOW-API-Version\": \"2026-02-01\" }\n});\nconst keys = await keysResponse.json();\nconst publicKeyBase64 = keys[0].publicKey;\n\n// Import the public key (SPKI format, base64-encoded)\nconst publicKey = await crypto.subtle.importKey(\n  \"spki\",\n  Buffer.from(publicKeyBase64, \"base64\"),\n  { name: \"Ed25519\" },\n  false,\n  [\"verify\"],\n);\n\nconst timestamp = req.headers[\"x-signature-timestamp\"];\nconst timestampTime = parseInt(timestamp, 10);\nconst now = Math.floor(Date.now() / 1000);\nconst isValidTimestamp = (Math.abs(now - timestampTime) < 300);\n\nif (!isValidTimestamp) {\n  throw new Error(\"Invalid timestamp\");\n}\n\nconst signature = req.headers[\"x-signature-ed25519\"];\nconst body = await consumers.text(req.body);\nconst isVerified = await crypto.subtle.verify(\n  { name: \"Ed25519\" },\n  publicKey,\n  Buffer.from(signature, \"hex\"),\n  Buffer.from(timestamp + body),\n);\n\nif (!isVerified) {\n  throw new Error(\"Invalid request signature\");\n}\n```\n\n## Upgrading webhook subscriptions\n\nEach subscription is pinned to an API version. When we release a new version, you should plan to migrate your subscriptions to it. Once a version reaches its end-of-life date we stop emitting events for subscriptions on that version, so an unmigrated subscription will silently stop receiving deliveries.\n\nUpgrading is a single `PATCH` per subscription. The snippet below lists every subscription on your organization, bumps any pinned to a given older version to a specified newer one, and skips subscriptions on `next` (which track the latest stable version automatically). It uses cursor pagination so it works for organizations with any number of subscriptions.\n\n```typescript\n// Upgrade webhook subscriptions from 2026-02-01 -> 2026-04-01. Skip \"next\".\nconst BASE = \"https://console.xbow.com\";\nconst ORG_ID = \"your-organization-id\";\nconst API_KEY = \"your-api-key\";\nconst OLD = \"2026-02-01\";\nconst NEW = \"2026-04-01\";\n\nconst headers = { Authorization: `Bearer ${API_KEY}`, \"X-XBOW-API-Version\": NEW };\n\nasync function* paginate<T>(url: string): AsyncGenerator<T> {\n  let cursor: string | null = null;\n  do {\n    const u = new URL(url);\n    if (cursor) u.searchParams.set(\"cursor\", cursor);\n    const res = await fetch(u, { headers });\n    if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);\n    const page = (await res.json()) as { items: T[]; nextCursor: string | null };\n    yield* page.items;\n    cursor = page.nextCursor;\n  } while (cursor);\n}\n\ntype Sub = { id: string; apiVersion: string };\nfor await (const wh of paginate<Sub>(`${BASE}/api/v1/organizations/${ORG_ID}/webhooks`)) {\n  if (wh.apiVersion === \"next\") { console.log(`skip   ${wh.id} (next)`); continue; }\n  if (wh.apiVersion !== OLD)    { console.log(`skip   ${wh.id} (${wh.apiVersion})`); continue; }\n  const res = await fetch(`${BASE}/api/v1/webhooks/${wh.id}`, {\n    method: \"PATCH\",\n    headers: { ...headers, \"Content-Type\": \"application/json\" },\n    body: JSON.stringify({ apiVersion: NEW }),\n  });\n  if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);\n  console.log(`bump   ${wh.id} ${OLD} -> ${NEW}`);\n}\n```\n\nAn `apiVersion`-only `PATCH` does not re-validate your endpoint, so the upgrade is cheap and safe to run for many subscriptions at once. A `PATCH` that changes `targetUrl` does re-send the validation pings described above, and must receive a 2xx for the valid ping to succeed.\n",
+        "type": "text/plain"
+      },
+      "item": [
+        {
+          "id": "c7d6a464-f103-4e84-a701-0e0ab1890e05",
+          "name": "List webhook subscriptions",
+          "request": {
+            "name": "List webhook subscriptions",
+            "description": {
+              "content": "Lists all webhook subscriptions for an organization.\n\nSupports pagination via `limit` and `after` query parameters.\n\nRequires an _organization_ API key.",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "organizations",
+                ":organizationId",
+                "webhooks"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [
+                {
+                  "disabled": false,
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "disabled": false,
+                  "key": "after",
+                  "value": "<string>"
+                }
+              ],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<string>",
+                  "key": "organizationId",
+                  "description": "(Required) "
+                }
+              ]
+            },
+            "header": [
+              {
+                "disabled": false,
+                "description": "(Required) API version to use for this request",
+                "key": "X-XBOW-API-Version",
+                "value": "<string>"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{bearerToken}}"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "id": "c0e53980-ffe3-4451-9d9a-3f59062eb9ea",
+              "name": "Default Response",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "organizations",
+                    ":organizationId",
+                    "webhooks"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "limit",
+                      "value": "20"
+                    },
+                    {
+                      "key": "after",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "organizationId",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "(Required) API version to use for this request",
+                    "key": "X-XBOW-API-Version",
+                    "value": "2026-07-01"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"items\": [\n    {\n      \"apiVersion\": \"2026-07-01\",\n      \"createdAt\": \"1949-04-01T12:41:41.004Z\",\n      \"events\": [\n        \"ping\"\n      ],\n      \"id\": \"string\",\n      \"targetUrl\": \"https://AXLYNHSsrzCitGZHJkCiszOUHRo.zykrni.cD8Ms.nNaYjp5WfQbThBK67dKHwHABW-s\",\n      \"updatedAt\": \"1947-01-06T06:51:17.476Z\"\n    },\n    {\n      \"apiVersion\": \"2026-07-01\",\n      \"createdAt\": \"2019-08-14T11:52:49.432Z\",\n      \"events\": [\n        \"ping\"\n      ],\n      \"id\": \"string\",\n      \"targetUrl\": \"https://rmxEpNmUnXAZDkwIZEbwviasCRIPlZj.zpzup.RHDbUdd.HA4AYpT9CK,RUOu.mTFQTcSO1ETPB9C5tXNAIQFy78Rbk\",\n      \"updatedAt\": \"1965-11-04T23:04:26.510Z\"\n    }\n  ],\n  \"nextCursor\": \"string\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "0280d8db-92ad-4dc4-81cd-93d9cf9986f6",
+              "name": "Default Response",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "organizations",
+                    ":organizationId",
+                    "webhooks"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "limit",
+                      "value": "20"
+                    },
+                    {
+                      "key": "after",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "organizationId",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "(Required) API version to use for this request",
+                    "key": "X-XBOW-API-Version",
+                    "value": "2026-07-01"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"code\": \"FST_ERR_VALIDATION\",\n  \"error\": \"Bad Request\",\n  \"message\": \"string\",\n  \"requestId\": \"string\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "16de6eba-651f-4faa-94bd-ab7747a44613",
+          "name": "Create webhook subscription",
+          "request": {
+            "name": "Create webhook subscription",
+            "description": {
+              "content": "Creates a new webhook subscription for an organization. Upon completion XBOW will deliver 2 `ping` events, one with a valid and one with an invalid signature.\n\nRequires an _organization_ API key.",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "organizations",
+                ":organizationId",
+                "webhooks"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<string>",
+                  "key": "organizationId",
+                  "description": "(Required) "
+                }
+              ]
+            },
+            "header": [
+              {
+                "disabled": false,
+                "description": "(Required) API version to use for this request",
+                "key": "X-XBOW-API-Version",
+                "value": "<string>"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{bearerToken}}"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"apiVersion\": \"<string>\",\n  \"events\": [\n    \"<string>\"\n  ],\n  \"targetUrl\": \"<uri>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "id": "5c004168-b89a-4320-84ea-a1212d3e55e9",
+              "name": "Default Response",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "organizations",
+                    ":organizationId",
+                    "webhooks"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "organizationId",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "(Required) API version to use for this request",
+                    "key": "X-XBOW-API-Version",
+                    "value": "2026-07-01"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"apiVersion\": \"<string>\",\n  \"events\": [\n    \"<string>\"\n  ],\n  \"targetUrl\": \"<uri>\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"apiVersion\": \"2026-04-01\",\n  \"createdAt\": \"1949-12-06T19:39:02.596Z\",\n  \"events\": [\n    \"ping\"\n  ],\n  \"id\": \"string\",\n  \"targetUrl\": \"https://ExRfRSuVwdHjchXnkNfGw.rpQD4ak0jlRC3MMKzj9tBqukpSroNJHaSgRjcUpY27Pku\",\n  \"updatedAt\": \"2008-06-08T03:12:22.958Z\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "d69126cc-35a4-457d-aca8-a7d3f7848ded",
+              "name": "Default Response",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "organizations",
+                    ":organizationId",
+                    "webhooks"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "organizationId",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "(Required) API version to use for this request",
+                    "key": "X-XBOW-API-Version",
+                    "value": "2026-07-01"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"apiVersion\": \"<string>\",\n  \"events\": [\n    \"<string>\"\n  ],\n  \"targetUrl\": \"<uri>\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"code\": \"FST_ERR_VALIDATION\",\n  \"error\": \"Bad Request\",\n  \"message\": \"string\",\n  \"requestId\": \"string\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "01927ea9-319d-4a66-87e4-50a7b9e2323a",
+          "name": "Delete webhook subscription",
+          "request": {
+            "name": "Delete webhook subscription",
+            "description": {
+              "content": "Deletes a webhook subscription.\n\nRequires an _organization_ API key.",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "webhooks",
+                ":webhookId"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<string>",
+                  "key": "webhookId",
+                  "description": "(Required) "
+                }
+              ]
+            },
+            "header": [
+              {
+                "disabled": false,
+                "description": "(Required) API version to use for this request",
+                "key": "X-XBOW-API-Version",
+                "value": "<string>"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "DELETE",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{bearerToken}}"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "id": "a7b8bccd-6f26-42cc-8d48-a8da4d316a9d",
+              "name": "Default Response",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "webhooks",
+                    ":webhookId"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "webhookId",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "(Required) API version to use for this request",
+                    "key": "X-XBOW-API-Version",
+                    "value": "2026-07-01"
+                  }
+                ],
+                "method": "DELETE",
+                "body": {}
+              },
+              "status": "No Content",
+              "code": 204,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "text/plain"
+                }
+              ],
+              "body": "",
+              "cookie": [],
+              "_postman_previewlanguage": "text"
+            },
+            {
+              "id": "30e9c51a-b259-421e-a8f9-94c20beac6e8",
+              "name": "Default Response",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "webhooks",
+                    ":webhookId"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "webhookId",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "(Required) API version to use for this request",
+                    "key": "X-XBOW-API-Version",
+                    "value": "2026-07-01"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "DELETE",
+                "body": {}
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"code\": \"FST_ERR_VALIDATION\",\n  \"error\": \"Bad Request\",\n  \"message\": \"string\",\n  \"requestId\": \"string\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "28e4ca2f-7c4d-4d78-82fb-6b0431a29b6d",
+              "name": "The requested resource was not found",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "webhooks",
+                    ":webhookId"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "webhookId",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "(Required) API version to use for this request",
+                    "key": "X-XBOW-API-Version",
+                    "value": "2026-07-01"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "DELETE",
+                "body": {}
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"code\": \"ERR_NOT_FOUND\",\n  \"error\": \"Not Found\",\n  \"message\": \"string\",\n  \"requestId\": \"string\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "c5b570e6-a053-4c4d-94a6-6bd1f8565adb",
+          "name": "Get webhook subscription",
+          "request": {
+            "name": "Get webhook subscription",
+            "description": {
+              "content": "Gets a specific webhook subscription by ID.\n\nRequires an _organization_ API key.",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "webhooks",
+                ":webhookId"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<string>",
+                  "key": "webhookId",
+                  "description": "(Required) "
+                }
+              ]
+            },
+            "header": [
+              {
+                "disabled": false,
+                "description": "(Required) API version to use for this request",
+                "key": "X-XBOW-API-Version",
+                "value": "<string>"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{bearerToken}}"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "id": "eaa1fc78-4fc8-4c37-a032-e76d64957bf7",
+              "name": "Default Response",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "webhooks",
+                    ":webhookId"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "webhookId",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "(Required) API version to use for this request",
+                    "key": "X-XBOW-API-Version",
+                    "value": "2026-07-01"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"apiVersion\": \"2026-04-01\",\n  \"createdAt\": \"1949-12-06T19:39:02.596Z\",\n  \"events\": [\n    \"ping\"\n  ],\n  \"id\": \"string\",\n  \"targetUrl\": \"https://ExRfRSuVwdHjchXnkNfGw.rpQD4ak0jlRC3MMKzj9tBqukpSroNJHaSgRjcUpY27Pku\",\n  \"updatedAt\": \"2008-06-08T03:12:22.958Z\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "73115966-613b-4eeb-9c3e-1d0f3020fde6",
+              "name": "Default Response",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "webhooks",
+                    ":webhookId"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "webhookId",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "(Required) API version to use for this request",
+                    "key": "X-XBOW-API-Version",
+                    "value": "2026-07-01"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"code\": \"FST_ERR_VALIDATION\",\n  \"error\": \"Bad Request\",\n  \"message\": \"string\",\n  \"requestId\": \"string\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "c5cafead-104d-4aec-a594-9cfbdf78d7ed",
+              "name": "The requested resource was not found",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "webhooks",
+                    ":webhookId"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "webhookId",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "(Required) API version to use for this request",
+                    "key": "X-XBOW-API-Version",
+                    "value": "2026-07-01"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"code\": \"ERR_NOT_FOUND\",\n  \"error\": \"Not Found\",\n  \"message\": \"string\",\n  \"requestId\": \"string\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "ef7e7d51-ce55-41d9-a8a6-f46f51684b02",
+          "name": "Update webhook subscription",
+          "request": {
+            "name": "Update webhook subscription",
+            "description": {
+              "content": "Updates an existing webhook subscription.\n\nRequires an _organization_ API key.",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "webhooks",
+                ":webhookId"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<string>",
+                  "key": "webhookId",
+                  "description": "(Required) "
+                }
+              ]
+            },
+            "header": [
+              {
+                "disabled": false,
+                "description": "(Required) API version to use for this request",
+                "key": "X-XBOW-API-Version",
+                "value": "<string>"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "PATCH",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{bearerToken}}"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"apiVersion\": \"<string>\",\n  \"events\": [\n    \"<string>\"\n  ],\n  \"targetUrl\": \"<uri>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "id": "57ceb715-3f2b-4962-9363-9f5e81fe2132",
+              "name": "Default Response",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "webhooks",
+                    ":webhookId"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "webhookId",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "(Required) API version to use for this request",
+                    "key": "X-XBOW-API-Version",
+                    "value": "2026-07-01"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "PATCH",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"targetUrl\": \"https://example.com/new-webhook\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"apiVersion\": \"2026-04-01\",\n  \"createdAt\": \"1949-12-06T19:39:02.596Z\",\n  \"events\": [\n    \"ping\"\n  ],\n  \"id\": \"string\",\n  \"targetUrl\": \"https://ExRfRSuVwdHjchXnkNfGw.rpQD4ak0jlRC3MMKzj9tBqukpSroNJHaSgRjcUpY27Pku\",\n  \"updatedAt\": \"2008-06-08T03:12:22.958Z\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "1be18d54-a69d-4b74-b805-cca2a1bb20a8",
+              "name": "Default Response",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "webhooks",
+                    ":webhookId"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "webhookId",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "(Required) API version to use for this request",
+                    "key": "X-XBOW-API-Version",
+                    "value": "2026-07-01"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "PATCH",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"targetUrl\": \"https://example.com/new-webhook\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"code\": \"FST_ERR_VALIDATION\",\n  \"error\": \"Bad Request\",\n  \"message\": \"string\",\n  \"requestId\": \"string\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "7a54e6f0-55ad-4700-82c6-a6c970a31929",
+              "name": "The requested resource was not found",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "webhooks",
+                    ":webhookId"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "webhookId",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "(Required) API version to use for this request",
+                    "key": "X-XBOW-API-Version",
+                    "value": "2026-07-01"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "PATCH",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"targetUrl\": \"https://example.com/new-webhook\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"code\": \"ERR_NOT_FOUND\",\n  \"error\": \"Not Found\",\n  \"message\": \"string\",\n  \"requestId\": \"string\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "4984489e-3f98-4a91-b668-181fd9965de1",
+          "name": "List webhook subscription deliveries",
+          "request": {
+            "name": "List webhook subscription deliveries",
+            "description": {
+              "content": "Lists delivery history for a specific webhook subscription.\n\nSupports pagination via `limit` and `after` query parameters.\n\nRequires an _organization_ API key.",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "webhooks",
+                ":webhookId",
+                "deliveries"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [
+                {
+                  "disabled": false,
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "disabled": false,
+                  "key": "after",
+                  "value": "<string>"
+                }
+              ],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<string>",
+                  "key": "webhookId",
+                  "description": "(Required) "
+                }
+              ]
+            },
+            "header": [
+              {
+                "disabled": false,
+                "description": "(Required) API version to use for this request",
+                "key": "X-XBOW-API-Version",
+                "value": "<string>"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{bearerToken}}"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "id": "52a10192-8714-4331-98ed-20111be6b979",
+              "name": "Default Response",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "webhooks",
+                    ":webhookId",
+                    "deliveries"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "limit",
+                      "value": "20"
+                    },
+                    {
+                      "key": "after",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "webhookId",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "(Required) API version to use for this request",
+                    "key": "X-XBOW-API-Version",
+                    "value": "2026-07-01"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"items\": [\n    {\n      \"payload\": {\n        \"eventId\": \"123e4567-e89b-12d3-a456-426614174000\",\n        \"type\": \"ping\"\n      },\n      \"request\": {\n        \"body\": \"{\\\"eventId\\\":\\\"123e4567-e89b-12d3-a456-426614174000\\\",\\\"type\\\":\\\"ping\\\"}\",\n        \"headers\": {\n          \"Content-Type\": \"application/json\",\n          \"X-Signature-Ed25519\": \"a1b2c3d4e5f6...\",\n          \"X-Signature-Timestamp\": \"1735689600\"\n        }\n      },\n      \"response\": {\n        \"body\": \"\",\n        \"headers\": {\n          \"Connection\": \"close\",\n          \"Date\": \"Wed, 01 Jan 2025 00:00:00 GMT\"\n        },\n        \"status\": 204\n      },\n      \"sentAt\": \"2025-01-01T00:00:00Z\",\n      \"success\": true\n    }\n  ],\n  \"nextCursor\": \"eyJjcmVhdGVkQXQiOiIyMDI1LTAxLTAxVDAwOjAwOjAwWiIsImlkIjoiMTIzZTQ1NjctZTg5Yi0xMmQzLWE0NTYtNDI2NjE0MTc0MDAwIn0=\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "cd6ca548-82e2-4683-8872-84ffcc032704",
+              "name": "Default Response",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "webhooks",
+                    ":webhookId",
+                    "deliveries"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "limit",
+                      "value": "20"
+                    },
+                    {
+                      "key": "after",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "webhookId",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "(Required) API version to use for this request",
+                    "key": "X-XBOW-API-Version",
+                    "value": "2026-07-01"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"code\": \"FST_ERR_VALIDATION\",\n  \"error\": \"Bad Request\",\n  \"message\": \"string\",\n  \"requestId\": \"string\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "4b8b61c9-acb0-49a8-b0ec-4da9c21d7ca3",
+              "name": "The requested resource was not found",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "webhooks",
+                    ":webhookId",
+                    "deliveries"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "limit",
+                      "value": "20"
+                    },
+                    {
+                      "key": "after",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "webhookId",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "(Required) API version to use for this request",
+                    "key": "X-XBOW-API-Version",
+                    "value": "2026-07-01"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"code\": \"ERR_NOT_FOUND\",\n  \"error\": \"Not Found\",\n  \"message\": \"string\",\n  \"requestId\": \"string\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "bb696e0f-f08b-4f16-9400-a1f17fdb9f12",
+          "name": "Ping webhook subscription",
+          "request": {
+            "name": "Ping webhook subscription",
+            "description": {
+              "content": "Sends a ping event to a webhook subscription to test connectivity.\n\nRequires an _organization_ API key.",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "webhooks",
+                ":webhookId",
+                "ping"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<string>",
+                  "key": "webhookId",
+                  "description": "(Required) "
+                }
+              ]
+            },
+            "header": [
+              {
+                "disabled": false,
+                "description": "(Required) API version to use for this request",
+                "key": "X-XBOW-API-Version",
+                "value": "<string>"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{bearerToken}}"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "id": "f9df21a4-18a4-41df-82ea-d7c894361388",
+              "name": "Default Response",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "webhooks",
+                    ":webhookId",
+                    "ping"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "webhookId",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "(Required) API version to use for this request",
+                    "key": "X-XBOW-API-Version",
+                    "value": "2026-07-01"
+                  }
+                ],
+                "method": "POST",
+                "body": {}
+              },
+              "status": "No Content",
+              "code": 204,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "text/plain"
+                }
+              ],
+              "body": "",
+              "cookie": [],
+              "_postman_previewlanguage": "text"
+            },
+            {
+              "id": "d0c09333-b30c-4e95-8911-c59c7c0c8c40",
+              "name": "Default Response",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "webhooks",
+                    ":webhookId",
+                    "ping"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "webhookId",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "(Required) API version to use for this request",
+                    "key": "X-XBOW-API-Version",
+                    "value": "2026-07-01"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {}
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"code\": \"FST_ERR_VALIDATION\",\n  \"error\": \"Bad Request\",\n  \"message\": \"string\",\n  \"requestId\": \"string\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "0e81bc0c-9bd4-4314-aff4-34435713ba73",
+              "name": "The requested resource was not found",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "webhooks",
+                    ":webhookId",
+                    "ping"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "webhookId",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "(Required) API version to use for this request",
+                    "key": "X-XBOW-API-Version",
+                    "value": "2026-07-01"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {}
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"code\": \"ERR_NOT_FOUND\",\n  \"error\": \"Not Found\",\n  \"message\": \"string\",\n  \"requestId\": \"string\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        }
+      ],
+      "event": []
+    }
+  ],
+  "event": [],
+  "variable": [
+    {
+      "type": "string",
+      "value": "https://console.xbow.com/",
+      "key": "baseUrl"
+    }
+  ],
+  "info": {
+    "_postman_id": "c0a9f28d-117d-4702-8bf6-71afa7d13754",
+    "name": "XBOW Assessments Webhooks API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": {
+      "content": "\n# Versioning\n\nThe API is in public preview. This is a stable version that exposes the most common functionality of the platform. If your use case is not covered, tell us so that we can prioritize work for future releases.\n\nAll API endpoints require the `X-XBOW-API-Version` header to be set to a supported version. Requests without a version header will be rejected with a `400 Bad Request` response.\n\n## Version Lifecycle\n\nAPI versions follow a `YYYY-MM-DD` naming convention (for example, `2026-04-01`). During the public preview, each version is supported, without breaking changes, for a minimum of 4 months from its release date. The support window for new versions will increase as the API matures.\n\n| Version    | Release Date | End of Life |\n|------------|--------------|-------------|\n| next       | Rolling      | N/A         |\n| 2026-07-01 | 2026-07-01   | 2026-11-01  |\n| 2026-06-01 | 2026-06-01   | 2026-10-01  |\n| 2026-04-01 | 2026-04-01   | 2026-07-01  |\n\n## The \"next\" Version\n\nThe `next` version provides early access to upcoming API changes. Use it in non-production environments to test and prepare for the next stable release.\n\n- Changes are pushed to `next` as they stabilize\n- `next` becomes the next stable version upon release\n- Breaking changes may occur in `next` before a stable release\n\n## End of Life (EOL)\n\nWhen a version reaches its end-of-life date:\n\n- **API requests** to that version will fail with a `400 Bad Request` response\n- **Webhook subscriptions** for that version will stop emitting events\n\nMigrate to a supported version before the EOL date to avoid service disruption. Also update webhooks to a supported version.\n\n## Changes from 2026-06-01 to 2026-07-01\n\n### Finding workflow metadata\n\nFindings now carry customer-controlled workflow metadata, independent of the XBOW-owned lifecycle fields (state, severity, CVSS):\n\n- `externalWorkflowState`: your own tracking state for the finding.\n- `externalTicketReference`: a reference to an external ticket. May only be present alongside an `externalWorkflowState`.\n\nA new endpoint updates these fields:\n\n- `PATCH /api/v1/findings/:findingId` — Update a finding's `externalWorkflowState` and `externalTicketReference`. Omitted fields are left unchanged; send `null` to clear a field.\n\nThese fields also appear in `GET /api/v1/findings/{findingId}`, `GET /api/v1/assets/{assetId}/findings`, and `finding.changed` webhook payloads for subscriptions pinned to `2026-07-01`.\n\n# Accessing the API\n\nThe API is available at `https://console.xbow.com/api/v1/`. All endpoints require authentication via an API key provided in the `Authorization: Bearer <token>` header.\n\n**Note:** For Lightspeed organizations, the API is available in read-only mode. That is, only `GET` endpoints are available.\n\n## Generate a personal access token (PAT)\n\n1. Log into your XBOW dashboard at https://console.xbow.com with administrator access to the organization you want to generate an API key for.\n1. Click your profile icon in the top right corner and select **Settings**.\n1. In the left sidebar, click **Personal Access Tokens**.\n1. Click **Generate new token**.\n1. Provide a name and select the scope for the token, that is, the organization you want to use it with.\n1. Click **Create**.\n1. Copy and securely store your key (it won't be shown again).\n\nStore API keys securely using environment variables or secret managers. Never commit keys to version control. Rotate keys periodically and revoke compromised keys immediately.\n\n## API request headers\n\nAll API requests require two headers: your API key for authentication and the API version you want to use. For example:\n\n```curl\ncurl -X GET \"https://console.xbow.com/api/v1/assets/{assetId}/findings\" \\\n  -H \"Authorization: Bearer YOUR_API_KEY\" \\\n  -H \"X-XBOW-API-Version: 2026-07-01\" \\\n  -H \"Content-Type: application/json\"\n```\n\n## Error responses\n\nIn addition to the responses described with each endpoint, the API may also return the following responses:\n\n- `400 Bad Request`: the request was malformed or contained invalid parameters, including missing version header.\n- `401 Unauthorized`: missing an API key or the provided API key is invalid.\n- `403 Forbidden`: the API key is valid, but the user does not have permission to access the requested resource.\n- `429 Too Many Requests`: exceeded rate limit, try again with exponential backoff.\n- `500 Internal Server Error`: an unexpected error occurred, try again with exponential backoff.\n\nThe error response body will be in the following format:\n\n```json\n{\n  \"code\": \"ERR_ERROR_TYPE\",\n  \"error\": \"Error Type\",\n  \"message\": \"Detailed error message\"\n}\n```\n\n# Pagination & Rate Limiting\n\n## Pagination\n\nList endpoints use cursor-based pagination. Use the `limit` query parameter to control page size (1-100, default 20) and the `after` parameter to fetch subsequent pages using the cursor from a previous response.\n\nResponses include an `items` array and a `nextCursor` field:\n\n```json\n{\n  \"items\": [...],\n  \"nextCursor\": \"eyJpZCI6IjEyMyJ9\"\n}\n```\n\nTo fetch the next page, pass the `nextCursor` value as the `after` parameter in your next request. When `nextCursor` is `null`, there are no more results.\n\n## Rate Limiting\n\nAPI requests are subject to rate limiting. If you receive a `429 Too Many Requests` response, implement exponential backoff before retrying.\n\n",
+      "type": "text/plain"
+    }
+  }
+}

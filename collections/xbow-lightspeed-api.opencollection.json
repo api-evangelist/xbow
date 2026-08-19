@@ -1,0 +1,50 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "XBOW Assessments Lightspeed API",
+    "version": "2026-07-01"
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Lightspeed",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Submit Lightspeed request",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://console.xbow.com/api/v1/integrations/:integrationId/lightspeed",
+            "headers": [
+              {
+                "name": "X-XBOW-API-Version",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "integrationId",
+                "value": "",
+                "type": "path"
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            },
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "Request a Lightspeed assessment.\n\nRequires an _integration_ API key.\n\nProvide `companyInfo` and `contactInfo` to create a new organization, or `organizationId` to add an asset to an existing organization."
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

@@ -1,0 +1,905 @@
+{
+  "item": [
+    {
+      "id": "d0ec1ca0-443a-4c60-b62b-8830cc249ed4",
+      "name": "Assets",
+      "description": {
+        "content": "Endpoints related to assets within an organization.\n\nAll endpoints require an _organization_ API key.",
+        "type": "text/plain"
+      },
+      "item": [
+        {
+          "id": "4d968d91-aa24-497a-9b02-8237df1c053e",
+          "name": "Get asset",
+          "request": {
+            "name": "Get asset",
+            "description": {
+              "content": "Gets a specific asset by ID.",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "assets",
+                ":assetId"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<string>",
+                  "key": "assetId",
+                  "description": "(Required) "
+                }
+              ]
+            },
+            "header": [
+              {
+                "disabled": false,
+                "description": "(Required) API version to use for this request",
+                "key": "X-XBOW-API-Version",
+                "value": "<string>"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{bearerToken}}"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "id": "c6c7020e-fba6-4f0a-892a-c7ee00ba1237",
+              "name": "Default Response",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "assets",
+                    ":assetId"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "assetId",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "(Required) API version to use for this request",
+                    "key": "X-XBOW-API-Version",
+                    "value": "2026-07-01"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"approvedTimeWindows\": {\n    \"entries\": [\n      {\n        \"endTime\": \"-7027292293:-458812269-601.143374509\",\n        \"endWeekday\": 5,\n        \"startTime\": \"-65381-960.70171:-8606.733426.168\",\n        \"startWeekday\": 5\n      },\n      {\n        \"endTime\": \"-19463499751.22-22848468.5771385947:4.3127538-03072\",\n        \"endWeekday\": 1,\n        \"startTime\": \"181965-545171479.73044:-2-376282772\",\n        \"startWeekday\": 5\n      }\n    ],\n    \"tz\": \"string\"\n  },\n  \"archiveAt\": \"2017-07-06T06:33:16.936Z\",\n  \"authorizationHeaderDomains\": \"attackable\",\n  \"checks\": {\n    \"assetReachable\": {\n      \"error\": {\n        \"code\": \"string\",\n        \"type\": \"dns\"\n      },\n      \"message\": \"string\",\n      \"state\": \"valid\"\n    },\n    \"credentials\": {\n      \"error\": {\n        \"type\": \"string\"\n      },\n      \"message\": \"string\",\n      \"state\": \"checking\"\n    },\n    \"dnsBoundaryRules\": {\n      \"error\": {\n        \"type\": \"string\"\n      },\n      \"message\": \"string\",\n      \"state\": \"invalid\"\n    },\n    \"updatedAt\": \"1949-11-19T20:41:21.173Z\"\n  },\n  \"createdAt\": \"2013-12-20T13:54:03.114Z\",\n  \"credentials\": [\n    {\n      \"id\": \"string\",\n      \"name\": \"string\",\n      \"password\": \"string\",\n      \"type\": \"username-password\",\n      \"username\": \"string\",\n      \"authenticatorUri\": \"otpauth://\",\n      \"emailAddress\": \"II@XJTq.VaEo0JN.Lr.4XqGXT.bNA.8O.XmD6cp.tKXOberVvBj.yo7Zl.cU\"\n    },\n    {\n      \"id\": \"string\",\n      \"name\": \"string\",\n      \"password\": \"string\",\n      \"type\": \"username-password\",\n      \"username\": \"string\",\n      \"authenticatorUri\": \"otpauth://3k>?\",\n      \"emailAddress\": \"kOf.T@FcTBlIQOcQ-.3wpp9.fPViWniTz7.YjADaymmxnI\"\n    }\n  ],\n  \"customHeaderDomains\": \"attackable\",\n  \"dnsBoundaryRules\": [\n    {\n      \"action\": \"deny\",\n      \"filter\": \"string\",\n      \"id\": \"string\",\n      \"type\": \"glob\",\n      \"includeSubdomains\": false\n    },\n    {\n      \"action\": \"deny\",\n      \"filter\": \"string\",\n      \"id\": \"string\",\n      \"type\": \"glob\",\n      \"includeSubdomains\": true\n    }\n  ],\n  \"headers\": {\n    \"key_0\": \"string\",\n    \"key_1\": \"string\"\n  },\n  \"httpBoundaryRules\": [\n    {\n      \"action\": \"allow-auth\",\n      \"filter\": \"string\",\n      \"id\": \"string\",\n      \"type\": \"glob\",\n      \"includeSubdomains\": true\n    },\n    {\n      \"action\": \"allow-visit\",\n      \"filter\": \"string\",\n      \"id\": \"string\",\n      \"type\": \"glob\",\n      \"includeSubdomains\": false\n    }\n  ],\n  \"id\": \"string\",\n  \"lifecycle\": \"active\",\n  \"maxRequestsPerSecond\": 5278651127085077,\n  \"name\": \"string\",\n  \"organizationId\": \"string\",\n  \"sku\": \"standard-sku\",\n  \"startUrl\": \"http://MRONSblmkC.kreaJqwak4DaY5WTi5ubZKgdY0wHHB+GlgZaIbsEZewAZ\",\n  \"updatedAt\": \"1959-02-06T14:09:20.783Z\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "b604fbeb-e224-4999-a7c6-7dc90613c79a",
+              "name": "Default Response",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "assets",
+                    ":assetId"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "assetId",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "(Required) API version to use for this request",
+                    "key": "X-XBOW-API-Version",
+                    "value": "2026-07-01"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"code\": \"FST_ERR_VALIDATION\",\n  \"error\": \"Bad Request\",\n  \"message\": \"string\",\n  \"requestId\": \"string\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "bcb033ac-1d34-4ae8-8858-be6f5286b5b4",
+              "name": "The requested resource was not found",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "assets",
+                    ":assetId"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "assetId",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "(Required) API version to use for this request",
+                    "key": "X-XBOW-API-Version",
+                    "value": "2026-07-01"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"code\": \"ERR_NOT_FOUND\",\n  \"error\": \"Not Found\",\n  \"message\": \"string\",\n  \"requestId\": \"string\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "b4489fb5-6b5b-4449-8227-511f8bb4cd87",
+          "name": "Update asset",
+          "request": {
+            "name": "Update asset",
+            "description": {
+              "content": "Updates an existing asset.\n\nAny call to this endpoint will trigger checks on new values which may make requests against the asset. Webhook events will be dispatched as checks complete. Changing `startUrl` or `credentials` will trigger a crawl of the asset to discover new DNS boundary rules.",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "assets",
+                ":assetId"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<string>",
+                  "key": "assetId",
+                  "description": "(Required) "
+                }
+              ]
+            },
+            "header": [
+              {
+                "disabled": false,
+                "description": "(Required) API version to use for this request",
+                "key": "X-XBOW-API-Version",
+                "value": "<string>"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "PUT",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{bearerToken}}"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"approvedTimeWindows\": {\n    \"entries\": [\n      {\n        \"endTime\": \"<string>\",\n        \"endWeekday\": \"<number>\",\n        \"startTime\": \"<string>\",\n        \"startWeekday\": \"<number>\"\n      },\n      {\n        \"endTime\": \"<string>\",\n        \"endWeekday\": \"<number>\",\n        \"startTime\": \"<string>\",\n        \"startWeekday\": \"<number>\"\n      }\n    ],\n    \"tz\": \"<string>\"\n  },\n  \"authorizationHeaderDomains\": \"<string>\",\n  \"credentials\": [\n    {\n      \"id\": \"<string>\",\n      \"name\": \"<string>\",\n      \"password\": \"<string>\",\n      \"type\": \"<string>\",\n      \"username\": \"<string>\",\n      \"authenticatorUri\": \"<string>\",\n      \"emailAddress\": \"<email>\"\n    },\n    {\n      \"id\": \"<string>\",\n      \"name\": \"<string>\",\n      \"password\": \"<string>\",\n      \"type\": \"<string>\",\n      \"username\": \"<string>\",\n      \"authenticatorUri\": \"<string>\",\n      \"emailAddress\": \"<email>\"\n    }\n  ],\n  \"customHeaderDomains\": \"<string>\",\n  \"dnsBoundaryRules\": [\n    {\n      \"action\": \"<string>\",\n      \"filter\": \"<string>\",\n      \"id\": \"<string>\",\n      \"type\": \"<string>\",\n      \"includeSubdomains\": \"<boolean>\"\n    },\n    {\n      \"action\": \"<string>\",\n      \"filter\": \"<string>\",\n      \"id\": \"<string>\",\n      \"type\": \"<string>\",\n      \"includeSubdomains\": \"<boolean>\"\n    }\n  ],\n  \"headers\": {\n    \"key_0\": \"<string>\"\n  },\n  \"httpBoundaryRules\": [\n    {\n      \"action\": \"<string>\",\n      \"filter\": \"<string>\",\n      \"id\": \"<string>\",\n      \"type\": \"<string>\",\n      \"includeSubdomains\": \"<boolean>\"\n    },\n    {\n      \"action\": \"<string>\",\n      \"filter\": \"<string>\",\n      \"id\": \"<string>\",\n      \"type\": \"<string>\",\n      \"includeSubdomains\": \"<boolean>\"\n    }\n  ],\n  \"maxRequestsPerSecond\": \"<integer>\",\n  \"name\": \"<string>\",\n  \"startUrl\": \"<uri>\",\n  \"sku\": \"standard-sku\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "id": "a2a70141-a7f5-45b8-9878-a0f95becd305",
+              "name": "Default Response",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "assets",
+                    ":assetId"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "assetId",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "(Required) API version to use for this request",
+                    "key": "X-XBOW-API-Version",
+                    "value": "2026-07-01"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "PUT",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"approvedTimeWindows\": {\n    \"entries\": [\n      {\n        \"endTime\": \"<string>\",\n        \"endWeekday\": \"<number>\",\n        \"startTime\": \"<string>\",\n        \"startWeekday\": \"<number>\"\n      },\n      {\n        \"endTime\": \"<string>\",\n        \"endWeekday\": \"<number>\",\n        \"startTime\": \"<string>\",\n        \"startWeekday\": \"<number>\"\n      }\n    ],\n    \"tz\": \"<string>\"\n  },\n  \"authorizationHeaderDomains\": \"<string>\",\n  \"credentials\": [\n    {\n      \"id\": \"<string>\",\n      \"name\": \"<string>\",\n      \"password\": \"<string>\",\n      \"type\": \"<string>\",\n      \"username\": \"<string>\",\n      \"authenticatorUri\": \"<string>\",\n      \"emailAddress\": \"<email>\"\n    },\n    {\n      \"id\": \"<string>\",\n      \"name\": \"<string>\",\n      \"password\": \"<string>\",\n      \"type\": \"<string>\",\n      \"username\": \"<string>\",\n      \"authenticatorUri\": \"<string>\",\n      \"emailAddress\": \"<email>\"\n    }\n  ],\n  \"customHeaderDomains\": \"<string>\",\n  \"dnsBoundaryRules\": [\n    {\n      \"action\": \"<string>\",\n      \"filter\": \"<string>\",\n      \"id\": \"<string>\",\n      \"type\": \"<string>\",\n      \"includeSubdomains\": \"<boolean>\"\n    },\n    {\n      \"action\": \"<string>\",\n      \"filter\": \"<string>\",\n      \"id\": \"<string>\",\n      \"type\": \"<string>\",\n      \"includeSubdomains\": \"<boolean>\"\n    }\n  ],\n  \"headers\": {\n    \"key_0\": \"<string>\",\n    \"key_1\": \"<string>\"\n  },\n  \"httpBoundaryRules\": [\n    {\n      \"action\": \"<string>\",\n      \"filter\": \"<string>\",\n      \"id\": \"<string>\",\n      \"type\": \"<string>\",\n      \"includeSubdomains\": \"<boolean>\"\n    },\n    {\n      \"action\": \"<string>\",\n      \"filter\": \"<string>\",\n      \"id\": \"<string>\",\n      \"type\": \"<string>\",\n      \"includeSubdomains\": \"<boolean>\"\n    }\n  ],\n  \"maxRequestsPerSecond\": \"<integer>\",\n  \"name\": \"<string>\",\n  \"startUrl\": \"<uri>\",\n  \"sku\": \"standard-sku\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"approvedTimeWindows\": {\n    \"entries\": [\n      {\n        \"endTime\": \"-7027292293:-458812269-601.143374509\",\n        \"endWeekday\": 5,\n        \"startTime\": \"-65381-960.70171:-8606.733426.168\",\n        \"startWeekday\": 5\n      },\n      {\n        \"endTime\": \"-19463499751.22-22848468.5771385947:4.3127538-03072\",\n        \"endWeekday\": 1,\n        \"startTime\": \"181965-545171479.73044:-2-376282772\",\n        \"startWeekday\": 5\n      }\n    ],\n    \"tz\": \"string\"\n  },\n  \"archiveAt\": \"2017-07-06T06:33:16.936Z\",\n  \"authorizationHeaderDomains\": \"attackable\",\n  \"checks\": {\n    \"assetReachable\": {\n      \"error\": {\n        \"code\": \"string\",\n        \"type\": \"dns\"\n      },\n      \"message\": \"string\",\n      \"state\": \"valid\"\n    },\n    \"credentials\": {\n      \"error\": {\n        \"type\": \"string\"\n      },\n      \"message\": \"string\",\n      \"state\": \"checking\"\n    },\n    \"dnsBoundaryRules\": {\n      \"error\": {\n        \"type\": \"string\"\n      },\n      \"message\": \"string\",\n      \"state\": \"invalid\"\n    },\n    \"updatedAt\": \"1949-11-19T20:41:21.173Z\"\n  },\n  \"createdAt\": \"2013-12-20T13:54:03.114Z\",\n  \"credentials\": [\n    {\n      \"id\": \"string\",\n      \"name\": \"string\",\n      \"password\": \"string\",\n      \"type\": \"username-password\",\n      \"username\": \"string\",\n      \"authenticatorUri\": \"otpauth://\",\n      \"emailAddress\": \"II@XJTq.VaEo0JN.Lr.4XqGXT.bNA.8O.XmD6cp.tKXOberVvBj.yo7Zl.cU\"\n    },\n    {\n      \"id\": \"string\",\n      \"name\": \"string\",\n      \"password\": \"string\",\n      \"type\": \"username-password\",\n      \"username\": \"string\",\n      \"authenticatorUri\": \"otpauth://3k>?\",\n      \"emailAddress\": \"kOf.T@FcTBlIQOcQ-.3wpp9.fPViWniTz7.YjADaymmxnI\"\n    }\n  ],\n  \"customHeaderDomains\": \"attackable\",\n  \"dnsBoundaryRules\": [\n    {\n      \"action\": \"deny\",\n      \"filter\": \"string\",\n      \"id\": \"string\",\n      \"type\": \"glob\",\n      \"includeSubdomains\": false\n    },\n    {\n      \"action\": \"deny\",\n      \"filter\": \"string\",\n      \"id\": \"string\",\n      \"type\": \"glob\",\n      \"includeSubdomains\": true\n    }\n  ],\n  \"headers\": {\n    \"key_0\": \"string\",\n    \"key_1\": \"string\"\n  },\n  \"httpBoundaryRules\": [\n    {\n      \"action\": \"allow-auth\",\n      \"filter\": \"string\",\n      \"id\": \"string\",\n      \"type\": \"glob\",\n      \"includeSubdomains\": true\n    },\n    {\n      \"action\": \"allow-visit\",\n      \"filter\": \"string\",\n      \"id\": \"string\",\n      \"type\": \"glob\",\n      \"includeSubdomains\": false\n    }\n  ],\n  \"id\": \"string\",\n  \"lifecycle\": \"active\",\n  \"maxRequestsPerSecond\": 5278651127085077,\n  \"name\": \"string\",\n  \"organizationId\": \"string\",\n  \"sku\": \"standard-sku\",\n  \"startUrl\": \"http://MRONSblmkC.kreaJqwak4DaY5WTi5ubZKgdY0wHHB+GlgZaIbsEZewAZ\",\n  \"updatedAt\": \"1959-02-06T14:09:20.783Z\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "79d3e3c4-7d32-4e8e-bc1d-83740e939672",
+              "name": "Default Response",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "assets",
+                    ":assetId"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "assetId",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "(Required) API version to use for this request",
+                    "key": "X-XBOW-API-Version",
+                    "value": "2026-07-01"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "PUT",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"approvedTimeWindows\": {\n    \"entries\": [\n      {\n        \"endTime\": \"<string>\",\n        \"endWeekday\": \"<number>\",\n        \"startTime\": \"<string>\",\n        \"startWeekday\": \"<number>\"\n      },\n      {\n        \"endTime\": \"<string>\",\n        \"endWeekday\": \"<number>\",\n        \"startTime\": \"<string>\",\n        \"startWeekday\": \"<number>\"\n      }\n    ],\n    \"tz\": \"<string>\"\n  },\n  \"authorizationHeaderDomains\": \"<string>\",\n  \"credentials\": [\n    {\n      \"id\": \"<string>\",\n      \"name\": \"<string>\",\n      \"password\": \"<string>\",\n      \"type\": \"<string>\",\n      \"username\": \"<string>\",\n      \"authenticatorUri\": \"<string>\",\n      \"emailAddress\": \"<email>\"\n    },\n    {\n      \"id\": \"<string>\",\n      \"name\": \"<string>\",\n      \"password\": \"<string>\",\n      \"type\": \"<string>\",\n      \"username\": \"<string>\",\n      \"authenticatorUri\": \"<string>\",\n      \"emailAddress\": \"<email>\"\n    }\n  ],\n  \"customHeaderDomains\": \"<string>\",\n  \"dnsBoundaryRules\": [\n    {\n      \"action\": \"<string>\",\n      \"filter\": \"<string>\",\n      \"id\": \"<string>\",\n      \"type\": \"<string>\",\n      \"includeSubdomains\": \"<boolean>\"\n    },\n    {\n      \"action\": \"<string>\",\n      \"filter\": \"<string>\",\n      \"id\": \"<string>\",\n      \"type\": \"<string>\",\n      \"includeSubdomains\": \"<boolean>\"\n    }\n  ],\n  \"headers\": {\n    \"key_0\": \"<string>\",\n    \"key_1\": \"<string>\"\n  },\n  \"httpBoundaryRules\": [\n    {\n      \"action\": \"<string>\",\n      \"filter\": \"<string>\",\n      \"id\": \"<string>\",\n      \"type\": \"<string>\",\n      \"includeSubdomains\": \"<boolean>\"\n    },\n    {\n      \"action\": \"<string>\",\n      \"filter\": \"<string>\",\n      \"id\": \"<string>\",\n      \"type\": \"<string>\",\n      \"includeSubdomains\": \"<boolean>\"\n    }\n  ],\n  \"maxRequestsPerSecond\": \"<integer>\",\n  \"name\": \"<string>\",\n  \"startUrl\": \"<uri>\",\n  \"sku\": \"standard-sku\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"code\": \"FST_ERR_VALIDATION\",\n  \"error\": \"Bad Request\",\n  \"message\": \"string\",\n  \"requestId\": \"string\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "de1f6a86-0f84-40d2-b38f-b45262a65f76",
+          "name": "List assets",
+          "request": {
+            "name": "List assets",
+            "description": {
+              "content": "Lists all assets in an organization.\n\nSupports pagination via `limit` and `after` query parameters.",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "organizations",
+                ":organizationId",
+                "assets"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [
+                {
+                  "disabled": false,
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "disabled": false,
+                  "key": "after",
+                  "value": "<string>"
+                }
+              ],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<string>",
+                  "key": "organizationId",
+                  "description": "(Required) "
+                }
+              ]
+            },
+            "header": [
+              {
+                "disabled": false,
+                "description": "(Required) API version to use for this request",
+                "key": "X-XBOW-API-Version",
+                "value": "<string>"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{bearerToken}}"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "id": "31b3ddee-6f12-4550-a4fc-47982fb7dba6",
+              "name": "Default Response",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "organizations",
+                    ":organizationId",
+                    "assets"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "limit",
+                      "value": "20"
+                    },
+                    {
+                      "key": "after",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "organizationId",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "(Required) API version to use for this request",
+                    "key": "X-XBOW-API-Version",
+                    "value": "2026-07-01"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"items\": [\n    {\n      \"createdAt\": \"1971-07-24T10:44:22.471Z\",\n      \"id\": \"string\",\n      \"lifecycle\": \"active\",\n      \"name\": \"string\",\n      \"updatedAt\": \"1952-04-26T19:23:30.186Z\"\n    },\n    {\n      \"createdAt\": \"1988-07-14T17:46:27.862Z\",\n      \"id\": \"string\",\n      \"lifecycle\": \"active\",\n      \"name\": \"string\",\n      \"updatedAt\": \"2012-10-08T19:23:39.987Z\"\n    }\n  ],\n  \"nextCursor\": \"string\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "cb8c87dc-96a5-48ca-9125-0b22b4bef001",
+              "name": "Default Response",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "organizations",
+                    ":organizationId",
+                    "assets"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "limit",
+                      "value": "20"
+                    },
+                    {
+                      "key": "after",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "organizationId",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "(Required) API version to use for this request",
+                    "key": "X-XBOW-API-Version",
+                    "value": "2026-07-01"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"code\": \"FST_ERR_VALIDATION\",\n  \"error\": \"Bad Request\",\n  \"message\": \"string\",\n  \"requestId\": \"string\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "f1366514-a1f1-4d57-83c0-599e8da8a5c5",
+          "name": "Create asset",
+          "request": {
+            "name": "Create asset",
+            "description": {
+              "content": "Creates a new asset in an organization. An asset represents a web application to be assessed. They contain boundaries, credentials, etc.",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "organizations",
+                ":organizationId",
+                "assets"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<string>",
+                  "key": "organizationId",
+                  "description": "(Required) "
+                }
+              ]
+            },
+            "header": [
+              {
+                "disabled": false,
+                "description": "(Required) API version to use for this request",
+                "key": "X-XBOW-API-Version",
+                "value": "<string>"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{bearerToken}}"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"<string>\",\n  \"sku\": \"<string>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "id": "dff84a80-2788-490c-9022-5ceb046e72be",
+              "name": "Default Response",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "organizations",
+                    ":organizationId",
+                    "assets"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "organizationId",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "(Required) API version to use for this request",
+                    "key": "X-XBOW-API-Version",
+                    "value": "2026-07-01"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Example Target\",\n  \"sku\": \"standard-sku\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"approvedTimeWindows\": {\n    \"entries\": [\n      {\n        \"endTime\": \"9298393815.116254310:-2971724.77708-2144739179\",\n        \"endWeekday\": 4,\n        \"startTime\": \"-7549.84329657073502.1:636443785.524-1\",\n        \"startWeekday\": 2\n      },\n      {\n        \"endTime\": \"59.46351677488909.7574:-50\",\n        \"endWeekday\": 6,\n        \"startTime\": \"-499-45.487:26314139109401903\",\n        \"startWeekday\": 3\n      }\n    ],\n    \"tz\": \"string\"\n  },\n  \"archiveAt\": \"1961-11-22T12:18:39.850Z\",\n  \"authorizationHeaderDomains\": \"attackable\",\n  \"checks\": {\n    \"assetReachable\": {\n      \"error\": {\n        \"code\": \"string\",\n        \"type\": \"dns\"\n      },\n      \"message\": \"string\",\n      \"state\": \"valid\"\n    },\n    \"credentials\": {\n      \"error\": {\n        \"type\": \"string\"\n      },\n      \"message\": \"string\",\n      \"state\": \"checking\"\n    },\n    \"dnsBoundaryRules\": {\n      \"error\": {\n        \"type\": \"string\"\n      },\n      \"message\": \"string\",\n      \"state\": \"invalid\"\n    },\n    \"updatedAt\": \"2016-11-07T11:25:56.330Z\"\n  },\n  \"createdAt\": \"1962-03-24T07:30:38.055Z\",\n  \"credentials\": [\n    {\n      \"id\": \"string\",\n      \"name\": \"string\",\n      \"password\": \"string\",\n      \"type\": \"username-password\",\n      \"username\": \"string\",\n      \"authenticatorUri\": \"otpauth://QMLU({\",\n      \"emailAddress\": \"w0ZSQ61@lYayXYoq5.l.JvuGji.KxGKTQc.P.S5GctYdd-.apGgzOtnG.O.gzxhwkEMoq.ZgH.gikVtiXBY\"\n    },\n    {\n      \"id\": \"string\",\n      \"name\": \"string\",\n      \"password\": \"string\",\n      \"type\": \"username-password\",\n      \"username\": \"string\",\n      \"authenticatorUri\": \"otpauth://\",\n      \"emailAddress\": \"bCFveNLyBs@azEtPr.c15IB2dSnRD.eCC.loku5Guoxr.SQlHwX.5j13GR.ImCC6KHD.pLZVoTU\"\n    }\n  ],\n  \"customHeaderDomains\": \"all\",\n  \"dnsBoundaryRules\": [\n    {\n      \"action\": \"allow-attack\",\n      \"filter\": \"string\",\n      \"id\": \"string\",\n      \"type\": \"glob\",\n      \"includeSubdomains\": true\n    },\n    {\n      \"action\": \"allow-visit\",\n      \"filter\": \"string\",\n      \"id\": \"string\",\n      \"type\": \"glob\",\n      \"includeSubdomains\": true\n    }\n  ],\n  \"headers\": {\n    \"key_0\": \"string\",\n    \"key_1\": \"string\",\n    \"key_2\": \"string\",\n    \"key_3\": \"string\"\n  },\n  \"httpBoundaryRules\": [\n    {\n      \"action\": \"allow-auth\",\n      \"filter\": \"string\",\n      \"id\": \"string\",\n      \"type\": \"exact\",\n      \"includeSubdomains\": false\n    },\n    {\n      \"action\": \"deny\",\n      \"filter\": \"string\",\n      \"id\": \"string\",\n      \"type\": \"regexp\",\n      \"includeSubdomains\": false\n    }\n  ],\n  \"id\": \"string\",\n  \"lifecycle\": \"active\",\n  \"maxRequestsPerSecond\": 2745457629179942,\n  \"name\": \"string\",\n  \"organizationId\": \"string\",\n  \"sku\": \"standard-sku\",\n  \"startUrl\": \"https://PGbVRdvylMAOWSwPrOFtj.nzqqySW6o8eJLLCl\",\n  \"updatedAt\": \"2021-12-12T01:15:58.596Z\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "c4b10633-5d67-45a7-b4e9-51e7dc7eb445",
+              "name": "Default Response",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "organizations",
+                    ":organizationId",
+                    "assets"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "organizationId",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "(Required) API version to use for this request",
+                    "key": "X-XBOW-API-Version",
+                    "value": "2026-07-01"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Example Target\",\n  \"sku\": \"standard-sku\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"code\": \"FST_ERR_VALIDATION\",\n  \"error\": \"Bad Request\",\n  \"message\": \"string\",\n  \"requestId\": \"string\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        }
+      ],
+      "event": []
+    }
+  ],
+  "event": [],
+  "variable": [
+    {
+      "type": "string",
+      "value": "https://console.xbow.com/",
+      "key": "baseUrl"
+    }
+  ],
+  "info": {
+    "_postman_id": "25a7c154-957e-42ac-9299-0a8ae7c71553",
+    "name": "XBOW Assessments Assets API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": {
+      "content": "\n# Versioning\n\nThe API is in public preview. This is a stable version that exposes the most common functionality of the platform. If your use case is not covered, tell us so that we can prioritize work for future releases.\n\nAll API endpoints require the `X-XBOW-API-Version` header to be set to a supported version. Requests without a version header will be rejected with a `400 Bad Request` response.\n\n## Version Lifecycle\n\nAPI versions follow a `YYYY-MM-DD` naming convention (for example, `2026-04-01`). During the public preview, each version is supported, without breaking changes, for a minimum of 4 months from its release date. The support window for new versions will increase as the API matures.\n\n| Version    | Release Date | End of Life |\n|------------|--------------|-------------|\n| next       | Rolling      | N/A         |\n| 2026-07-01 | 2026-07-01   | 2026-11-01  |\n| 2026-06-01 | 2026-06-01   | 2026-10-01  |\n| 2026-04-01 | 2026-04-01   | 2026-07-01  |\n\n## The \"next\" Version\n\nThe `next` version provides early access to upcoming API changes. Use it in non-production environments to test and prepare for the next stable release.\n\n- Changes are pushed to `next` as they stabilize\n- `next` becomes the next stable version upon release\n- Breaking changes may occur in `next` before a stable release\n\n## End of Life (EOL)\n\nWhen a version reaches its end-of-life date:\n\n- **API requests** to that version will fail with a `400 Bad Request` response\n- **Webhook subscriptions** for that version will stop emitting events\n\nMigrate to a supported version before the EOL date to avoid service disruption. Also update webhooks to a supported version.\n\n## Changes from 2026-06-01 to 2026-07-01\n\n### Finding workflow metadata\n\nFindings now carry customer-controlled workflow metadata, independent of the XBOW-owned lifecycle fields (state, severity, CVSS):\n\n- `externalWorkflowState`: your own tracking state for the finding.\n- `externalTicketReference`: a reference to an external ticket. May only be present alongside an `externalWorkflowState`.\n\nA new endpoint updates these fields:\n\n- `PATCH /api/v1/findings/:findingId` — Update a finding's `externalWorkflowState` and `externalTicketReference`. Omitted fields are left unchanged; send `null` to clear a field.\n\nThese fields also appear in `GET /api/v1/findings/{findingId}`, `GET /api/v1/assets/{assetId}/findings`, and `finding.changed` webhook payloads for subscriptions pinned to `2026-07-01`.\n\n# Accessing the API\n\nThe API is available at `https://console.xbow.com/api/v1/`. All endpoints require authentication via an API key provided in the `Authorization: Bearer <token>` header.\n\n**Note:** For Lightspeed organizations, the API is available in read-only mode. That is, only `GET` endpoints are available.\n\n## Generate a personal access token (PAT)\n\n1. Log into your XBOW dashboard at https://console.xbow.com with administrator access to the organization you want to generate an API key for.\n1. Click your profile icon in the top right corner and select **Settings**.\n1. In the left sidebar, click **Personal Access Tokens**.\n1. Click **Generate new token**.\n1. Provide a name and select the scope for the token, that is, the organization you want to use it with.\n1. Click **Create**.\n1. Copy and securely store your key (it won't be shown again).\n\nStore API keys securely using environment variables or secret managers. Never commit keys to version control. Rotate keys periodically and revoke compromised keys immediately.\n\n## API request headers\n\nAll API requests require two headers: your API key for authentication and the API version you want to use. For example:\n\n```curl\ncurl -X GET \"https://console.xbow.com/api/v1/assets/{assetId}/findings\" \\\n  -H \"Authorization: Bearer YOUR_API_KEY\" \\\n  -H \"X-XBOW-API-Version: 2026-07-01\" \\\n  -H \"Content-Type: application/json\"\n```\n\n## Error responses\n\nIn addition to the responses described with each endpoint, the API may also return the following responses:\n\n- `400 Bad Request`: the request was malformed or contained invalid parameters, including missing version header.\n- `401 Unauthorized`: missing an API key or the provided API key is invalid.\n- `403 Forbidden`: the API key is valid, but the user does not have permission to access the requested resource.\n- `429 Too Many Requests`: exceeded rate limit, try again with exponential backoff.\n- `500 Internal Server Error`: an unexpected error occurred, try again with exponential backoff.\n\nThe error response body will be in the following format:\n\n```json\n{\n  \"code\": \"ERR_ERROR_TYPE\",\n  \"error\": \"Error Type\",\n  \"message\": \"Detailed error message\"\n}\n```\n\n# Pagination & Rate Limiting\n\n## Pagination\n\nList endpoints use cursor-based pagination. Use the `limit` query parameter to control page size (1-100, default 20) and the `after` parameter to fetch subsequent pages using the cursor from a previous response.\n\nResponses include an `items` array and a `nextCursor` field:\n\n```json\n{\n  \"items\": [...],\n  \"nextCursor\": \"eyJpZCI6IjEyMyJ9\"\n}\n```\n\nTo fetch the next page, pass the `nextCursor` value as the `after` parameter in your next request. When `nextCursor` is `null`, there are no more results.\n\n## Rate Limiting\n\nAPI requests are subject to rate limiting. If you receive a `429 Too Many Requests` response, implement exponential backoff before retrying.\n\n",
+      "type": "text/plain"
+    }
+  }
+}
