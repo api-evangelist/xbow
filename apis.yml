@@ -123,6 +123,8 @@ apis:
   humanURL: https://docs.xbow.com/api/
   baseURL: https://console.xbow.com/api/v1
   tags:
+  - Organization
+  tags_raw:
   - Organizations
   properties:
   - type: OpenAPI
@@ -487,6 +489,8 @@ apis:
   humanURL: https://docs.xbow.com/api/
   baseURL: https://console.xbow.com/api/v1
   tags:
+  - Webhook
+  tags_raw:
   - Webhooks
   properties:
   - type: OpenAPI
