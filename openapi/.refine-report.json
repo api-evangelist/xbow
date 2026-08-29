@@ -1,15 +1,7 @@
 {
   "provider": "xbow",
   "sources": [
-    "xbow-assessments-api-openapi.yml",
-    "xbow-assets-api-openapi.yml",
-    "xbow-findings-api-openapi.yml",
-    "xbow-lightspeed-api-openapi.yml",
-    "xbow-meta-api-openapi.yml",
-    "xbow-organizations-api-openapi.yml",
-    "xbow-reports-api-openapi.yml",
-    "xbow-resources-api-openapi.yml",
-    "xbow-webhooks-api-openapi.yml"
+    "_original/xbow-openapi-original.json"
   ],
   "outputs": [
     "xbow-assessments-api-openapi.yml",
@@ -25,6 +17,19 @@
   "archived": [],
   "errors": [],
   "warnings": [],
-  "notes": [],
-  "skipped": []
+  "notes": [
+    "sourced from openapi/_original/ (1 archived document(s)); previously refined output at the top level was skipped rather than re-split",
+    "xbow-openapi-original.json: upgraded openapi 3.1.0 -> OpenAPI 3.2.0"
+  ],
+  "skipped": [
+    "xbow-assessments-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "xbow-assets-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "xbow-findings-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "xbow-lightspeed-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "xbow-meta-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "xbow-organizations-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "xbow-reports-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "xbow-resources-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "xbow-webhooks-api-openapi.yml: previously refined output, superseded by openapi/_original/"
+  ]
 }
