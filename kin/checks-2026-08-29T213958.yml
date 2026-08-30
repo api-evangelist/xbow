@@ -1,15 +1,15 @@
 ---
 kin_checks:
   slug: xbow
-  schema_version: 0.15.1
-  scored_at: '2026-08-27'
-  run_ts: 2026-08-27T140727
+  schema_version: 0.16.0
+  scored_at: '2026-08-29'
+  run_ts: 2026-08-29T213958
   note: Actionable checks only (missed + partial). earned/na are every other check
-    in rubric/scoring-0.15.1.yml; counts below let you verify that.
+    in rubric/scoring-0.16.0.yml; counts below let you verify that.
   counts:
     total: 130
-    earned: 52
-    partial: 11
+    earned: 51
+    partial: 12
     missed: 43
     na: 24
   checks:
@@ -30,9 +30,6 @@ kin_checks:
     status: missed
     detail: 0 of 9 openapi documents pass
   - id: components_reuse
-    status: missed
-    detail: 0 of 9 openapi documents pass
-  - id: webhooks_or_callbacks
     status: missed
     detail: 0 of 9 openapi documents pass
   - id: json_schema_present
@@ -56,6 +53,8 @@ kin_checks:
   - id: balanced_severities
     status: missed
   - id: vocabulary_published
+    status: missed
+  - id: overlay_published
     status: missed
   - id: rate_limits_documented
     status: missed
@@ -112,6 +111,10 @@ kin_checks:
   - id: examples_present
     status: partial
     earned: 3.43
+  - id: webhooks_or_callbacks
+    status: partial
+    earned: 0.22
+    detail: 1 of 9 openapi documents pass
   - id: conformance_declared
     status: partial
     earned: 1.5
