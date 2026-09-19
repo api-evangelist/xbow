@@ -68,6 +68,8 @@ apis:
   humanURL: https://docs.xbow.com/api/
   baseURL: https://console.xbow.com/api/v1
   tags:
+  - Assessment
+  tags_raw:
   - Assessments
   properties:
   - type: OpenAPI
