@@ -1,0 +1,26 @@
+# Front Door AI Index — xbow — 2026-09-17
+# AI vocabulary counted on the provider's root page. Generated; do not edit.
+# `score` is null unless ownership is `own` — see front_door_ai.py.
+front_door_ai:
+  slug: xbow
+  lexicon_version: '1.0'
+  probed_at: '2026-09-17'
+  host: xbow.com
+  final_host: xbow.com
+  ownership: own
+  owner: xbow
+  shares_host_with: null
+  inherited_from: null
+  verdict: scored
+  score: 6
+  host_score: 6
+  density: 8.52
+  words: 704
+  tiers:
+    agentic: 0
+    core: 6
+    model: 0
+  ambiguous: 1
+  top_terms:
+    AI: 6
+    agent: 1
