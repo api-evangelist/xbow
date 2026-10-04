@@ -518,6 +518,9 @@ maintainers:
 - FN: APIs.json
   email: info@apis.io
 common:
+- type: CapabilityMap
+  url: capabilities/xbow-capability-edges.yml
+  name: Xbow Business Capability Map
 - type: Overlay
   url: overlays/xbow-openapi-overlay.yaml
 - type: AgenticAccess

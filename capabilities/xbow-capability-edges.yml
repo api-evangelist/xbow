@@ -1,0 +1,48 @@
+slug: xbow
+provider: Xbow
+generated_by: planning/capability-mapping/scripts/classify_capabilities.py
+model: claude-opus-5
+frame:
+- Software & Technology
+min_confidence: 0.7
+capability_model:
+  source: https://github.com/vincentmakes/turbo-ea-capabilities
+  license: CC-BY-4.0
+  attribution: Turbo EA Capabilities by Vincent Verdet — Turbo EA, https://github.com/vincentmakes/turbo-ea-capabilities,
+    CC BY 4.0
+  notice: NOTICE
+edge_count: 3
+edges:
+- tag: Findings
+  spec_file: xbow-findings-api-openapi.yml
+  capability_id: BC-620.40
+  capability_id_l1: BC-620
+  capability_name: Vulnerability Management
+  confidence: 0.92
+  evidence: GET /api/v1/assets/{assetId}/findings 'List findings'; POST /api/v1/findings/{findingId}/verify-fix
+    'Verify fix'
+  reason: Findings are validated vulnerabilities per asset, with remediation verification — squarely vulnerability
+    scanning/remediation management on an offensive security platform.
+- tag: Assessments
+  spec_file: xbow-assessments-api-openapi.yml
+  capability_id: BC-620.40
+  capability_id_l1: BC-620
+  capability_name: Vulnerability Management
+  confidence: 0.8
+  evidence: 'POST /api/v1/assets/{assetId}/assessments ''Request assessment''; ''Cancel assessment'' /
+    ''Pause assessment''; vendor: ''autonomous offensive security platform ... it identifies vulnerabilities,
+    chains them into attack paths, and proves exploitability'''
+  reason: Assessments here are penetration-test runs against registered assets that produce validated
+    vulnerability findings — vulnerability identification and validation. Some ambiguity versus threat
+    detection & response, but the surface is scan/assessment orchestration.
+- tag: Webhooks
+  spec_file: xbow-webhooks-api-openapi.yml
+  capability_id: BC-4270.80
+  capability_id_l1: BC-4270
+  capability_name: Webhook & Event Subscription Management
+  confidence: 0.7
+  evidence: POST /api/v1/organizations/{organizationId}/webhooks 'Create webhook subscription'; GET /api/v1/webhooks/{webhookId}/deliveries
+    'List webhook subscription deliveries'
+  reason: Full lifecycle of outbound webhook subscriptions including delivery inspection and ping, which
+    the frame explicitly carves out as Webhook & Event Subscription Management. Still largely integration
+    plumbing, so confidence is held at 0.7.
